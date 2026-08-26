@@ -1535,6 +1535,12 @@ document.addEventListener('DOMContentLoaded', () => {
           updateAuthUI();
           if (res.user && res.user.status !== 'pending') {
             showToast(`👋 Heureux de vous revoir, ${res.user.name} !`);
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('portal') === 'admin' || window.location.hash === '#admin') {
+              if (res.user.role === 'admin') {
+                switchTab('admin');
+              }
+            }
           }
         } else {
           showToast(res.message, "error");
@@ -2883,6 +2889,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) lucide.createIcons();
   updateAuthUI();
   renderLandingPricingCards();
+
+  // Handle secret admin link on load (?portal=admin or #admin)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('portal') === 'admin' || window.location.hash === '#admin') {
+    if (window.AuthManager && AuthManager.isAdmin()) {
+      switchTab('admin');
+    } else {
+      setAuthMode('login');
+      const authModal = document.getElementById('authModal');
+      if (authModal) authModal.classList.remove('hidden');
+      showToast("🔒 Zone Admin : Veuillez vous connecter.", "info");
+    }
+  }
 
   // Initial Canvases Render
   setTimeout(() => {
