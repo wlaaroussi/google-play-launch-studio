@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Play Launch Studio - Générateur Tout-en-Un d'Assets & Métadonnées ASO</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#00F0FF',
+              blue: '#3B82F6',
+              purple: '#8B5CF6',
+              dark: '#0B0F19',
+              card: '#111827'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- JSZip & FileSaver for Client-Side ZIP Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-[#0B0F19] text-gray-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- ========================================================================= -->
+  <!-- 0. ANNOUNCEMENT BANNER -->
+  <!-- ========================================================================= -->
+  <div id="siteAnnouncementBanner" class="bg-gradient-to-r from-purple-900/90 via-blue-900/90 to-cyan-900/90 border-b border-cyan-500/30 px-4 py-2 text-center text-xs font-medium text-cyan-200 flex items-center justify-center gap-3">
+    <span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 text-[10px]">NOUVEAU</span>
+    <span id="siteAnnouncementText">✨ Bienvenue sur Launch Studio ! Profitez du nouveau générateur vidéo 100% HD gratuit.</span>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- ========================================================================= -->
+  <!-- 1. TOP HEADER & BRANDING BAR -->
+  <!-- ========================================================================= -->
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-[#0B0F19]/90 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo & Mobile Menu Toggle -->
+      <div class="flex items-center gap-3.5">
+        <!-- Mobile Sidebar Hamburger Toggle Button -->
+        <button id="mobileSidebarToggleBtn" class="lg:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 border border-white/10 transition flex items-center justify-center" aria-label="Ouvrir le menu latéral">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 ring-2 ring-white/20 cursor-pointer" id="headerLogoBrandBtn">
+          <i data-lucide="play" class="w-6 h-6 text-black fill-current translate-x-0.5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-xl tracking-tight text-white font-['Outfit'] cursor-pointer" id="headerTitleBrandBtn">Google Play <span class="text-gradient-cyan">Launch Studio</span></h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">PRO EDITION</span>
+          </div>
+          <p class="text-xs text-gray-400 hidden sm:block">Générateur Tout-en-Un d'Assets Visuels, ASO & Conformité Console</p>
+        </div>
+      </div>
+
+      <!-- User Auth & Action Buttons -->
+      <div class="flex items-center gap-3">
+        
+        <!-- User Profile Pill (When Logged In) -->
+        <div id="userProfileHeaderPill" class="hidden flex items-center gap-3 glass-panel px-3.5 py-1.5 rounded-2xl border border-white/10">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-black text-xs shadow-md">
+            <span id="userAvatarLetter">A</span>
+          </div>
+          <div class="hidden sm:block text-left">
+            <div class="flex items-center gap-1.5">
+              <span id="userNameLabel" class="text-xs font-bold text-white">Admin</span>
+              <span id="userRoleBadge" class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN</span>
+            </div>
+            <span id="userEmailLabel" class="text-[10px] text-gray-400">admin@launchstudio.com</span>
+          </div>
+          <button id="logoutHeaderBtn" class="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-rose-400 transition" title="Se déconnecter">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Login / Register Button (When Logged Out) -->
+        <button id="openAuthModalBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] transition">
+          <i data-lucide="user" class="w-3.5 h-3.5 inline mr-1"></i>
+          <span>Connexion / Inscription</span>
+        </button>
+
+        <!-- Quick Global Master Export Button -->
+        <button id="masterExportHeaderBtn" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-white font-bold text-xs shadow-md hover:scale-[1.02] transition-all">
+          <i data-lucide="archive" class="w-4 h-4 text-cyan-400"></i>
+          <span>Pack (.ZIP)</span>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Main Navigation Bar (Horizontal Quick Switcher) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5">
+      <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto py-2.5 scrollbar-none" aria-label="Tabs">
+        <button data-tab="landing" class="main-nav-btn active flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-cyan-400 text-cyan-400 bg-cyan-950/40 transition-all">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span>🏠 Accueil & Services</span>
+        </button>
+        <button data-tab="graphics" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="palette" class="w-4 h-4"></i>
+          <span>1. Studio Graphique</span>
+        </button>
+        <button data-tab="video" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="video" class="w-4 h-4"></i>
+          <span>2. Vidéo Promo</span>
+        </button>
+        <button data-tab="aso" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>3. Textes & ASO</span>
+        </button>
+        <button data-tab="privacy" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+          <span>4. Confidentialité</span>
+        </button>
+        <button data-tab="checklist" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="check-square" class="w-4 h-4"></i>
+          <span>5. Checklist</span>
+        </button>
+        <button data-tab="resizer" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all">
+          <i data-lucide="crop" class="w-4 h-4"></i>
+          <span>6. Redimensionneur & Assets App</span>
+        </button>
+        <button data-tab="export" class="main-nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+          <i data-lucide="package-check" class="w-4 h-4"></i>
+          <span>7. Pack Global</span>
+        </button>
+        <!-- Protected Admin Dashboard Tab (Strictly Hidden for Non-Admins) -->
+        <button id="adminNavTabBtn" data-tab="admin" class="main-nav-btn hidden flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-transparent text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all">
+          <i data-lucide="crown" class="w-4 h-4"></i>
+          <span>👑 Espace Admin</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN APP WRAPPER: SIDEBAR + CONTENT AREA -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex w-full relative">
+
+    <!-- Mobile Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity lg:hidden"></div>
+
+    <!-- ======================================================================= -->
+    <!-- 2. SIDEBAR NAVIGATION (BARRE LATÉRALE CONNECTÉE) -->
+    <!-- ======================================================================= -->
+    <aside id="appSidebar" class="shrink-0 sticky top-20 h-[calc(100vh-5rem)] border-r border-white/10 bg-[#0B0F19]/95 backdrop-blur-2xl flex flex-col justify-between z-40 overflow-y-auto scrollbar-none select-none">
+      
+      <!-- Top Section: Navigation Links & Groups -->
+      <div class="p-3 space-y-4">
+        
+        <!-- Section 1: Général -->
+        <div class="space-y-1">
+          <div class="sidebar-category-header px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
+            <span>Général</span>
+          </div>
+          <button data-tab="landing" class="sidebar-nav-btn active w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-cyan-400 bg-cyan-950/30 border border-cyan-500/30 transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-cyan-500/10 group-hover:bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="home" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">Accueil & Services</span>
+          </button>
+        </div>
+
+        <!-- Section 2: Google Play Launch Studio -->
+        <div class="space-y-1">
+          <div class="sidebar-category-header px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-cyan-400/80 flex items-center justify-between">
+            <span>Google Play Studio</span>
+            <span class="sidebar-badge px-1.5 py-0.2 rounded text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold">100% HD</span>
+          </div>
+          
+          <!-- 1. Studio Graphique with Collapsible Submenu -->
+          <div class="space-y-0.5">
+            <button data-tab="graphics" data-has-sub="true" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+              <div class="w-7 h-7 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 transition">
+                <i data-lucide="palette" class="w-4 h-4"></i>
+              </div>
+              <span class="sidebar-label flex-1 text-left">1. Studio Graphique</span>
+              <i data-lucide="chevron-down" class="sidebar-chevron w-3.5 h-3.5 text-gray-400 transition-transform duration-200"></i>
+            </button>
+            <!-- Submenu Items -->
+            <div class="sidebar-submenu pl-8 pr-1 space-y-0.5">
+              <button data-tab="graphics" data-subtab="icon" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-cyan-300 hover:bg-white/5 transition">
+                <span>🎨 Icône (512x512)</span>
+              </button>
+              <button data-tab="graphics" data-subtab="feature" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-cyan-300 hover:bg-white/5 transition">
+                <span>🖼️ Feature Graphic (1024x500)</span>
+              </button>
+              <button data-tab="graphics" data-subtab="screenshots" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-cyan-300 hover:bg-white/5 transition">
+                <span>📱 Screenshots 3D (1080x1920)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Vidéo Promo -->
+          <button data-tab="video" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="video" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">2. Vidéo Promo HD</span>
+            <span class="sidebar-badge px-1.5 py-0.2 rounded text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">16:9 / 9:16</span>
+          </button>
+
+          <!-- 3. Textes & ASO -->
+          <button data-tab="aso" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">3. Textes & ASO</span>
+            <span class="sidebar-badge text-[10px] text-gray-400 font-mono">FR/AR/EN</span>
+          </button>
+
+          <!-- 4. Confidentialité -->
+          <button data-tab="privacy" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">4. Confidentialité</span>
+          </button>
+
+          <!-- 5. Checklist -->
+          <button data-tab="checklist" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="check-square" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">5. Checklist & Testeurs</span>
+          </button>
+
+        </div>
+
+        <!-- Section 3: Redimensionneur & Assets Multi-Plateformes -->
+        <div class="space-y-1">
+          <div class="sidebar-category-header px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+            <span>Assets Multi-Formats</span>
+            <span class="sidebar-badge px-1.5 py-0.2 rounded text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/30 font-bold">Expo & Mobile</span>
+          </div>
+
+          <!-- Redimensionneur with Submenu -->
+          <div class="space-y-0.5">
+            <button data-tab="resizer" data-has-sub="true" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+              <div class="w-7 h-7 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 transition">
+                <i data-lucide="crop" class="w-4 h-4"></i>
+              </div>
+              <span class="sidebar-label flex-1 text-left">6. Redimensionneur Assets</span>
+              <i data-lucide="chevron-down" class="sidebar-chevron w-3.5 h-3.5 text-gray-400 transition-transform duration-200"></i>
+            </button>
+            <!-- Submenu Items -->
+            <div class="sidebar-submenu pl-8 pr-1 space-y-0.5">
+              <button data-tab="resizer" data-resizertab="adaptive" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-purple-300 hover:bg-white/5 transition">
+                <span>📱 Adaptive Icons (Android 13+)</span>
+              </button>
+              <button data-tab="resizer" data-resizertab="splash" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-purple-300 hover:bg-white/5 transition">
+                <span>🚀 Splash Screen HD (2048)</span>
+              </button>
+              <button data-tab="resizer" data-resizertab="iconfav" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-purple-300 hover:bg-white/5 transition">
+                <span>🖼️ Icon Universal & Favicon</span>
+              </button>
+              <button data-tab="resizer" data-resizertab="custom" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-purple-300 hover:bg-white/5 transition">
+                <span>✂️ Custom Resizer Libre</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Export & Finalisation -->
+        <div class="space-y-1">
+          <div class="sidebar-category-header px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
+            <span>Téléchargements</span>
+          </div>
+          <button data-tab="export" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 border border-transparent transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-cyan-500/10 group-hover:bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 transition">
+              <i data-lucide="package-check" class="w-4 h-4"></i>
+            </div>
+            <span class="sidebar-label flex-1 text-left">7. Pack Global (.ZIP)</span>
+          </button>
+        </div>
+
+        <!-- Section 5: Admin Dashboard Protected Space -->
+        <div id="adminSidebarGroup" class="hidden space-y-1">
+          <div class="sidebar-category-header px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-400/90 flex items-center justify-between">
+            <span>Administration</span>
+            <span class="sidebar-badge px-1.5 py-0.2 rounded text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">ADMIN</span>
+          </div>
+          <div class="space-y-0.5">
+            <button id="adminSidebarNavBtn" data-tab="admin" data-has-sub="true" class="sidebar-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 border border-transparent transition-all group">
+              <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 transition">
+                <i data-lucide="crown" class="w-4 h-4"></i>
+              </div>
+              <span class="sidebar-label flex-1 text-left">👑 Espace Admin</span>
+              <span id="sidebarAdminBadge" class="sidebar-badge px-1.5 py-0.2 rounded-full bg-black text-amber-300 font-extrabold text-[10px]">0</span>
+              <i data-lucide="chevron-down" class="sidebar-chevron w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ml-1"></i>
+            </button>
+            <!-- Admin Submenu Items -->
+            <div class="sidebar-submenu pl-8 pr-1 space-y-0.5">
+              <button data-tab="admin" data-admintab="upgrades" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>💎 Demandes d'Upgrade</span>
+              </button>
+              <button data-tab="admin" data-admintab="users" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>👥 Utilisateurs</span>
+              </button>
+              <button data-tab="admin" data-admintab="pricing" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>💰 Tarifs (5$ & 8$)</span>
+              </button>
+              <button data-tab="admin" data-admintab="features" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>🎛️ Feature Flags</span>
+              </button>
+              <button data-tab="admin" data-admintab="settings" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>⚙️ Paramètres</span>
+              </button>
+              <button data-tab="admin" data-admintab="logs" class="sidebar-subnav-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-amber-300 hover:bg-white/5 transition">
+                <span>📜 Logs Système</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Section: Quick Actions & Collapse Toggle -->
+      <div class="p-3 border-t border-white/10 space-y-2 bg-[#0B0F19]/60">
+        <button id="sidebarMasterExportBtn" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-white font-bold text-xs shadow-md transition-all">
+          <i data-lucide="archive" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+          <span class="sidebar-label flex-1 text-left">Télécharger .ZIP</span>
+        </button>
+
+        <button id="sidebarCollapseBtn" class="hidden lg:flex w-full items-center justify-between px-3 py-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 text-xs font-medium transition-all" title="Réduire / Agrandir le menu">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sidebar" class="w-4 h-4"></i>
+            <span class="sidebar-footer-text">Réduire le menu</span>
+          </div>
+          <i data-lucide="chevrons-left" id="collapseChevronIcon" class="w-4 h-4 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTAINER WITH TABS -->
+    <!-- ========================================================================= -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
+
+      <!-- ======================================================================= -->
+      <!-- TAB 0: PAGE D'ACCUEIL VITRINE & HUB MULTI-SERVICES -->
+      <!-- ======================================================================= -->
+      <div id="tab-landing" class="main-tab-pane active space-y-16 py-4">
+
+      
+      <!-- Hero Section -->
+      <div class="text-center max-w-4xl mx-auto space-y-6">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold shadow-lg shadow-cyan-500/10">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>PORTAIL TOUT-EN-UN POUR DÉVELOPPEURS & CRÉATEURS D'APPLICATIONS</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight font-['Outfit'] leading-tight">
+          La Suite Complète Pour Vos <span class="text-gradient-cyan">Assets, Vidéos & Publications</span> Mobiles
+        </h1>
+
+        <p class="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          Accédez en un clic à nos deux grands services professionnels : le kit complet de publication Google Play Store et le générateur d'Assets & Redimensionneur d'icônes multi-formats (Expo, Android, iOS, Web).
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <button id="landingLaunchStudioBtn" class="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-sm shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span>1. Studio Google Play</span>
+          </button>
+          <button id="landingLaunchResizerBtn" class="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+            <i data-lucide="crop" class="w-4 h-4"></i>
+            <span>2. Redimensionneur & Assets App</span>
+          </button>
+          <button id="landingScrollPricingBtn" class="px-6 py-3.5 rounded-2xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-white font-bold text-sm hover:scale-[1.02] transition-all flex items-center gap-2">
+            <i data-lucide="tag" class="w-4 h-4 text-amber-400"></i>
+            <span>Tarifs (5$ & 8$)</span>
+          </button>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs text-gray-400">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+            <span>100% Conforme Google Play & Expo</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400"></i>
+            <span>100% Client-Side & Privé</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+            <span>Rendu Ultra-HD Sans Latence</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- GRAND MENU DES SERVICES (SERVICES HUB CARDS) -->
+      <!-- ===================================================================== -->
+      <div class="space-y-6">
+        <div class="text-center space-y-1">
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">HUB PRINCIPAL</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white font-['Outfit']">Choisissez Votre Service</h2>
+          <p class="text-xs text-gray-400">Sélectionnez l'outil adapté à votre étape de développement ou de publication.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          
+          <!-- SERVICE 1 CARD: GOOGLE PLAY LAUNCH STUDIO -->
+          <div class="glass-panel p-8 rounded-3xl border border-cyan-500/30 space-y-6 flex flex-col justify-between relative overflow-hidden group hover:border-cyan-400 transition-all shadow-xl shadow-cyan-950/20">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl -z-10 group-hover:bg-cyan-500/20 transition-all"></div>
+            
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-black font-black shadow-lg shadow-cyan-500/30">
+                  <i data-lucide="play" class="w-7 h-7 fill-current translate-x-0.5"></i>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">SERVICE 1 • TOUT-EN-UN</span>
+              </div>
+
+              <div>
+                <h3 class="text-2xl font-extrabold text-white font-['Outfit']">Google Play Launch Studio</h3>
+                <p class="text-xs sm:text-sm text-gray-300 mt-1 leading-relaxed">
+                  Le kit complet pour préparer et réussir la publication de votre application sur Google Play Console.
+                </p>
+              </div>
+
+              <!-- Feature List -->
+              <div class="space-y-2.5 pt-2 text-xs text-gray-300">
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="palette" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                  <span><strong>Studio Graphique HD</strong> : Icône 512x512, Feature Graphic 1024x500 & Screenshots 3D (1080x1920).</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="video" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                  <span><strong>Studio Vidéo Teaser Animé</strong> : Vidéo promotionnelle 1080p paysage (16:9) ou shorts (9:16).</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="file-text" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                  <span><strong>Module Textes & ASO Trilingue</strong> : Titres (30 car.), descriptions & notes en FR, AR (RTL) & EN.</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                  <span><strong>Générateur Politique Confidentialité</strong> : Conforme RGPD, COPPA & Play Console (HTML & MD).</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="check-square" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                  <span><strong>Checklist Console & 20 Testeurs</strong> : Suivi pas-à-pas et modèles d'invitations testeurs.</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <i data-lucide="archive" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                  <span><strong>Export Global (.ZIP)</strong> : Téléchargement complet du pack de lancement en 1 clic.</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="hubOpenPlayStudioBtn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-sm shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+              <span>Ouvrir Google Play Launch Studio</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- SERVICE 2 CARD: REDIMENSIONNEUR & ASSETS APP -->
+          <div class="glass-panel p-8 rounded-3xl border border-purple-500/30 space-y-6 flex flex-col justify-between relative overflow-hidden group hover:border-purple-400 transition-all shadow-xl shadow-purple-950/20">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl -z-10 group-hover:bg-purple-500/20 transition-all"></div>
+            
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/30">
+                  <i data-lucide="crop" class="w-7 h-7"></i>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">SERVICE 2 • ASSETS & RESIZE</span>
+              </div>
+
+              <div>
+                <h3 class="text-2xl font-extrabold text-white font-['Outfit']">Redimensionneur & Assets d'Application</h3>
+                <p class="text-xs sm:text-sm text-gray-300 mt-1 leading-relaxed">
+                  Générez instantanément l'ensemble des formats d'icônes, d'écrans de démarrage (Splash) et favicons pour votre application.
+                </p>
+              </div>
+
+              <!-- Required Formats Showcase -->
+              <div class="space-y-2 pt-2 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">android-icon-background.png</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">1024×1024</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">android-icon-foreground.png</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">1024×1024</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">android-icon-monochrome.png</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">1024×1024</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">icon.png (Universal)</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">1024×1024</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-pink-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">splash-icon.png (HD Splash)</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">2048×2048</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span class="font-mono text-[11px] text-gray-200">favicon.png (Web / PWA)</span>
+                    <span class="text-[10px] text-gray-400 ml-auto">48×48</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-2 text-[11px] text-gray-400">
+                  <i data-lucide="sliders" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+                  <span>Inclus : <strong>Redimensionneur d'image libre</strong> (dimensions personnalisées, PNG/JPG/WebP, contain/cover).</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="hubOpenResizerBtn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 text-white font-extrabold text-sm shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+              <span>Ouvrir le Redimensionneur & Assets App</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PRICING TABLE SECTION -->
+      <div id="pricingSection" class="space-y-8 pt-4">
+        <div class="text-center space-y-2">
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">ABONNEMENTS TRANSPARENTS</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white font-['Outfit']">Choisissez le Plan Adapté à Vos Besoins</h2>
+          <p class="text-xs sm:text-sm text-gray-400 max-w-lg mx-auto">
+            Accès démo gratuit pour tester, ou débloquez les téléchargements HD illimités avec l'approbation de l'administrateur.
+          </p>
+        </div>
+
+        <!-- Dynamic Pricing Cards Container -->
+        <div id="landingPricingCardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <!-- Dynamically populated from PricingManager -->
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 1: MODULE GRAPHIQUE (ICÔNE, FEATURE GRAPHIC, SCREENSHOTS) -->
+    <!-- ======================================================================= -->
+    <div id="tab-graphics" class="main-tab-pane space-y-6">
+      
+      <!-- Sub-Navigation for Graphics -->
+      <div class="flex flex-wrap items-center justify-between gap-4 glass-panel p-2.5 rounded-2xl">
+        <div class="flex items-center gap-2">
+          <button data-subtab="icon" class="graphics-sub-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-black shadow-md transition-all">
+            🎨 Icône (512x512 px)
+          </button>
+          <button data-subtab="feature" class="graphics-sub-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-gray-800/80 text-gray-300 hover:text-white transition-all">
+            🖼️ Feature Graphic (1024x500 px)
+          </button>
+          <button data-subtab="screenshots" class="graphics-sub-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-gray-800/80 text-gray-300 hover:text-white transition-all">
+            📱 Studio Screenshots (1080x1920 px)
+          </button>
+        </div>
+        <div class="text-xs text-gray-400 px-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Rendu Vectoriel Ultra-HD 100% Client-Side</span>
+        </div>
+      </div>
+
+      <!-- SUBTAB 1A: ICON GENERATOR (512x512) -->
+      <div id="subtab-icon" class="graphics-sub-pane active grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Controls Column (Left) -->
+        <div class="lg:col-span-6 space-y-6">
+          <div class="glass-panel p-6 rounded-2xl space-y-5">
+            <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-5 h-5"></i>
+              <span>Personnalisation de l'Icône</span>
+            </h3>
+
+            <!-- Foreground Content Type -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Type de Contenu Central</label>
+              <select id="iconFgType" class="w-full glass-input rounded-xl px-4 py-2.5 text-sm">
+                <option value="icon">Icône Vectorielle Intégrée</option>
+                <option value="emoji">Emoji Moderne</option>
+                <option value="text">Lettre / Monogramme Stylisé</option>
+                <option value="image">Téléverser mon Logo / Image</option>
+              </select>
+            </div>
+
+            <!-- Foreground Options: Vector Icon -->
+            <div id="iconFgIconGroup" class="space-y-3">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Sélectionner une icône</label>
+              <select id="iconSelect" class="w-full glass-input rounded-xl px-4 py-2.5 text-sm">
+                <option value="bolt">Éclair / Rapidité (Bolt)</option>
+                <option value="mosque">Mosquée / Islamique</option>
+                <option value="quran">Saint Coran / Livre</option>
+                <option value="weather">Météo / Soleil & Nuage</option>
+                <option value="rocket">Fusée / Productivité</option>
+                <option value="fitness">Haltère / Fitness & Sport</option>
+                <option value="calculator">Calculatrice / Outils</option>
+                <option value="cart">Panier / E-Commerce</option>
+                <option value="wallet">Portefeuille / Finance</option>
+                <option value="star">Étoile / Note</option>
+                <option value="shield">Bouclier / Sécurité</option>
+                <option value="sparkles">Étincelles / IA</option>
+              </select>
+            </div>
+
+            <!-- Foreground Options: Emoji -->
+            <div id="iconFgEmojiGroup" class="space-y-3 hidden">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Choisir un Emoji</label>
+              <input type="text" id="iconEmojiInput" value="⚡" maxlength="4" class="w-full glass-input rounded-xl px-4 py-2.5 text-xl text-center">
+              <div class="flex flex-wrap gap-2 pt-1">
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">⚡</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">🕋</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">☀️</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">🚀</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">💪</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">💰</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">🛍️</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">📐</button>
+                <button class="quick-emoji-btn px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-lg">🔒</button>
+              </div>
+            </div>
+
+            <!-- Foreground Options: Text Letter -->
+            <div id="iconFgTextGroup" class="space-y-3 hidden">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Lettre ou Initiales</label>
+              <input type="text" id="iconTextInput" value="G" maxlength="3" class="w-full glass-input rounded-xl px-4 py-2.5 text-lg font-bold text-center">
+            </div>
+
+            <!-- Foreground Options: Image Upload -->
+            <div id="iconFgImageGroup" class="space-y-3 hidden">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Importer un logo ou image (PNG/JPG/SVG)</label>
+              <input type="file" id="iconImageUpload" accept="image/*" class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-500 file:text-black hover:file:bg-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Scale / Zoom Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-gray-400">
+                <span>Taille de l'élément</span>
+                <span>Zoom</span>
+              </div>
+              <input type="range" id="iconScale" min="0.4" max="1.3" step="0.05" value="1.0" class="w-full accent-cyan-400">
+            </div>
+
+            <!-- Background Style & Colors -->
+            <div class="space-y-3 pt-2 border-t border-white/5">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Arrière-plan & Dégradés</label>
+              
+              <!-- Quick Palette Presets -->
+              <div class="grid grid-cols-5 gap-2">
+                <button data-color1="#00F0FF" data-color2="#3B82F6" class="icon-preset-btn h-8 rounded-lg bg-gradient-to-r from-[#00F0FF] to-[#3B82F6] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                <button data-color1="#8B5CF6" data-color2="#EC4899" class="icon-preset-btn h-8 rounded-lg bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                <button data-color1="#10B981" data-color2="#065F46" class="icon-preset-btn h-8 rounded-lg bg-gradient-to-r from-[#10B981] to-[#065F46] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                <button data-color1="#F59E0B" data-color2="#DC2626" class="icon-preset-btn h-8 rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#DC2626] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                <button data-color1="#1E293B" data-color2="#0F172A" class="icon-preset-btn h-8 rounded-lg bg-gradient-to-r from-[#1E293B] to-[#0F172A] ring-1 ring-white/20 hover:scale-105 transition"></button>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="text-[11px] text-gray-400">Couleur 1</label>
+                  <input type="color" id="iconColor1" value="#00F0FF" class="w-full h-10 rounded-xl bg-transparent cursor-pointer">
+                </div>
+                <div>
+                  <label class="text-[11px] text-gray-400">Couleur 2</label>
+                  <input type="color" id="iconColor2" value="#3B82F6" class="w-full h-10 rounded-xl bg-transparent cursor-pointer">
+                </div>
+                <div>
+                  <label class="text-[11px] text-gray-400">Type de Fond</label>
+                  <select id="iconBgType" class="w-full glass-input rounded-xl px-2 py-2 text-xs mt-0.5">
+                    <option value="gradient">Dégradé Linéaire</option>
+                    <option value="radial">Dégradé Radial</option>
+                    <option value="solid">Couleur Unie</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shape & Borders -->
+            <div class="space-y-3 pt-2 border-t border-white/5">
+              <div class="flex justify-between text-xs text-gray-400">
+                <span>Forme de l'icône (Rayon de courbure)</span>
+                <span class="text-cyan-400">Google Squircle</span>
+              </div>
+              <input type="range" id="iconRadius" min="0" max="256" step="5" value="115" class="w-full accent-cyan-400">
+              <div class="flex justify-between text-[10px] text-gray-500">
+                <span>Carré (0px)</span>
+                <span>Squircle Play Store (115px)</span>
+                <span>Rond (256px)</span>
+              </div>
+            </div>
+
+            <!-- Shadows & Glow Checkboxes -->
+            <div class="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
+              <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input type="checkbox" id="iconShadow" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                <span>Ombre portée 3D</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input type="checkbox" id="iconGlow" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                <span>Halo néon brillant</span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Preview & Export Column (Right) -->
+        <div class="lg:col-span-6 flex flex-col items-center justify-center space-y-6">
+          <div class="glass-panel p-8 rounded-3xl w-full flex flex-col items-center space-y-6">
+            
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+                <h4 class="font-bold text-sm text-gray-200">Prévisualisation Play Store HD</h4>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-mono">512 x 512 px</span>
+            </div>
+
+            <!-- Canvas Viewport with Pattern -->
+            <div class="canvas-preview-box p-6 w-full max-w-[380px] aspect-square flex items-center justify-center">
+              <canvas id="iconCanvas" width="512" height="512" class="w-full h-full object-contain rounded-2xl shadow-2xl transition-all"></canvas>
+            </div>
+
+            <!-- Specs & Download Button -->
+            <div class="w-full space-y-3">
+              <button id="downloadIconBtn" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                <span>Télécharger l'Icône (512x512 PNG)</span>
+              </button>
+
+              <div class="flex items-center justify-center gap-4 text-[11px] text-gray-400">
+                <span>✓ Format PNG 32-bit</span>
+                <span>•</span>
+                <span>✓ Poids max &lt; 1024 Ko</span>
+                <span>•</span>
+                <span>✓ Conforme Google Play</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUBTAB 1B: FEATURE GRAPHIC GENERATOR (1024x500) -->
+      <div id="subtab-feature" class="graphics-sub-pane grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Controls (Left) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+              <i data-lucide="layout" class="w-5 h-5"></i>
+              <span>Configuration Feature Graphic</span>
+            </h3>
+
+            <!-- Title & Subtitle -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Titre Promotionnel Accrocheur</label>
+              <input type="text" id="featTitle" value="Votre Application Révolutionnaire" class="w-full glass-input rounded-xl px-4 py-2 text-sm font-semibold">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Sous-titre / Slogan</label>
+              <input type="text" id="featSubtitle" value="Gagnez du temps et boostez vos résultats dès aujourd'hui" class="w-full glass-input rounded-xl px-4 py-2 text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Badge Promo</label>
+                <input type="text" id="featBadge" value="⭐ NOUVELLE VERSION" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Couleur Badge</label>
+                <input type="color" id="featBadgeColor" value="#00F0FF" class="w-full h-9 rounded-xl bg-transparent cursor-pointer mt-1">
+              </div>
+            </div>
+
+            <!-- Mockups Setup -->
+            <div class="space-y-2 pt-2 border-t border-white/5">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Disposition des Téléphones 3D</label>
+              <select id="featMockupMode" class="w-full glass-input rounded-xl px-4 py-2.5 text-sm">
+                <option value="single_tilted">1 Téléphone (Incliné 3D Moderne)</option>
+                <option value="single_front">1 Téléphone (Vue de Face Classique)</option>
+                <option value="dual">2 Téléphones (Mode Duo Comparaison)</option>
+                <option value="triple">3 Téléphones (Hero Showcase)</option>
+                <option value="none">Sans Téléphone (Bannière Typographique)</option>
+              </select>
+            </div>
+
+            <!-- Upload Mockup Screen -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Capture d'Écran de votre App</label>
+              <input type="file" id="featScreenUpload" accept="image/*" class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-500 file:text-black hover:file:bg-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Background Preset -->
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Thème de Fond</label>
+                <select id="featBgPreset" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="dark_navy">Dark Navy Neon</option>
+                  <option value="cyberpunk">Cyberpunk Purple</option>
+                  <option value="emerald">Emerald Nature</option>
+                  <option value="sunset">Sunset Gold</option>
+                  <option value="deep_space">Deep Space</option>
+                  <option value="minimal_light">Minimalist Light</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Police de Texte</label>
+                <select id="featFontFamily" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="Outfit">Outfit (Moderne)</option>
+                  <option value="Poppins">Poppins (Arrondi)</option>
+                  <option value="Inter">Inter (Épuré)</option>
+                  <option value="Cairo">Cairo (Arabe/Latin)</option>
+                  <option value="Tajawal">Tajawal (Arabe)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- RTL Arabic Switch -->
+            <div class="pt-2 border-t border-white/5">
+              <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input type="checkbox" id="featRTL" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                <span>Mode RTL Arabe (Disposition inversée droite à gauche)</span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Preview Column (Right) -->
+        <div class="lg:col-span-7 flex flex-col justify-center space-y-4">
+          <div class="glass-panel p-6 rounded-3xl space-y-4">
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+                <h4 class="font-bold text-sm text-gray-200">Image de Présentation (Feature Graphic)</h4>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-mono">1024 x 500 px</span>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="canvas-preview-box p-4 w-full aspect-[1024/500] flex items-center justify-center">
+              <canvas id="featureCanvas" width="1024" height="500" class="w-full h-full object-contain rounded-xl shadow-2xl"></canvas>
+            </div>
+
+            <button id="downloadFeatureBtn" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all">
+              <i data-lucide="download" class="w-5 h-5"></i>
+              <span>Télécharger le Feature Graphic (1024x500 PNG)</span>
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUBTAB 1C: PHONE SCREENSHOTS STUDIO (1080x1920) -->
+      <div id="subtab-screenshots" class="graphics-sub-pane grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Controls (Left) -->
+        <div class="lg:col-span-6 space-y-6">
+          
+          <!-- Slide Selector & Add -->
+          <div class="glass-panel p-4 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Gestionnaire de Captures (4 à 8 Slides)</label>
+            </div>
+            <div id="screensPagination" class="flex flex-wrap items-center gap-2">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Slide Customization Box -->
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+              <i data-lucide="smartphone" class="w-5 h-5"></i>
+              <span>Personnaliser la Capture Sélectionnée</span>
+            </h3>
+
+            <!-- Headline & Subtitle -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Titre Principal Impactant</label>
+              <input type="text" id="screenHeadline" value="Tableau de Bord Intelligent" class="w-full glass-input rounded-xl px-4 py-2 text-sm font-bold">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Sous-titre Explicatif</label>
+              <input type="text" id="screenSubtitle" value="Visualisez toutes vos données en un coup d'œil" class="w-full glass-input rounded-xl px-4 py-2 text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Badge / Tag Optionnel</label>
+                <input type="text" id="screenBadge" value="NOUVEAU" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Angle / Disposition Mockup</label>
+                <select id="screenLayout" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-0.5">
+                  <option value="tilt_left">3D Incliné Gauche</option>
+                  <option value="tilt_right">3D Incliné Droite</option>
+                  <option value="front_classic">Face Classique Centrée</option>
+                  <option value="dual_phone">Double Téléphone</option>
+                  <option value="hero_bottom">Hero Grand Format</option>
+                  <option value="floating">Flottant Perspective</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Upload Screenshot file for this slide -->
+            <div class="space-y-1 pt-2 border-t border-white/5">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Capture d'Écran pour cette Slide</label>
+              <input type="file" id="screenImageUpload" accept="image/*" class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-500 file:text-black hover:file:bg-cyan-400 cursor-pointer">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Thème de Fond</label>
+                <select id="screenBgPreset" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="dark_navy">Dark Navy Neon</option>
+                  <option value="cyberpunk">Cyberpunk Purple</option>
+                  <option value="emerald">Emerald Nature</option>
+                  <option value="sunset">Sunset Gold</option>
+                  <option value="deep_space">Deep Space</option>
+                  <option value="minimal_light">Minimalist Light</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Police</label>
+                <select id="screenFontFamily" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="Outfit">Outfit</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Cairo">Cairo (Arabe)</option>
+                  <option value="Tajawal">Tajawal (Arabe)</option>
+                  <option value="Inter">Inter</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- RTL Checkbox -->
+            <div class="pt-2 border-t border-white/5">
+              <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input type="checkbox" id="screenRTL" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                <span>Support Arabe RTL pour le texte</span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Preview Column (Right) -->
+        <div class="lg:col-span-6 flex flex-col items-center justify-center space-y-4">
+          <div class="glass-panel p-6 rounded-3xl w-full flex flex-col items-center space-y-4">
+            
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+                <h4 class="font-bold text-sm text-gray-200">Capture Smartphone HD (Ratio 9:16)</h4>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-mono">1080 x 1920 px</span>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="canvas-preview-box p-4 w-full max-w-[320px] aspect-[9/16] flex items-center justify-center">
+              <canvas id="screenshotCanvas" width="1080" height="1920" class="w-full h-full object-contain rounded-xl shadow-2xl"></canvas>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button id="downloadSingleScreenBtn" class="py-3 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-2 transition">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Télécharger cette capture</span>
+              </button>
+              <button id="downloadScreenshotsZipBtn" class="py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 hover:scale-[1.02] transition">
+                <i data-lucide="archive" class="w-4 h-4"></i>
+                <span>Télécharger Toutes en .ZIP</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB: MODULE VIDÉO PROMO & TRAILER (ANIMATEUR DE PHOTOS/CAPTURES) -->
+    <!-- ======================================================================= -->
+    <div id="tab-video" class="main-tab-pane space-y-6">
+      
+      <!-- Video Mode Header Banner -->
+      <div class="glass-panel p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <i data-lucide="clapperboard" class="w-5 h-5 text-black"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-white font-['Outfit'] flex items-center gap-2">
+              <span>Studio Vidéo Promo & Teaser App</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">100% CLIENT-SIDE HD</span>
+            </h3>
+            <p class="text-xs text-gray-400">Générez une vidéo animée percutante à partir de vos photos et captures d'écran</p>
+          </div>
+        </div>
+
+        <!-- Format Selector -->
+        <div class="flex items-center gap-2">
+          <button id="videoFormat169Btn" class="video-format-btn active px-3.5 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black flex items-center gap-1.5 transition">
+            <i data-lucide="tv" class="w-3.5 h-3.5"></i>
+            <span>Paysage 16:9 (YouTube & Play Store)</span>
+          </button>
+          <button id="videoFormat916Btn" class="video-format-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-400 hover:text-white flex items-center gap-1.5 transition">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+            <span>Portrait 9:16 (Shorts / Reels)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Video Settings & Slides Controls (Left) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Animation & Transition Settings -->
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h4 class="font-bold text-sm text-cyan-400 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4"></i>
+              <span>Paramètres d'Animation & Rendu</span>
+            </h4>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Durée par Photo</label>
+                <select id="videoSlideDuration" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="2">2 secondes (Rapide / Dynamique)</option>
+                  <option value="3" selected>3 secondes (Recommandé)</option>
+                  <option value="4">4 secondes (Détaillé)</option>
+                  <option value="5">5 secondes (Lent)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Effet de Transition</label>
+                <select id="videoTransition" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="flash_glow" selected>Halo Néon Lumineux & Glow</option>
+                  <option value="fade_dark">Fondu Sombre Élégant</option>
+                  <option value="slide_left">Glissement Dynamique</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Police des Textes</label>
+                <select id="videoFontFamily" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="Outfit">Outfit (Moderne)</option>
+                  <option value="Poppins">Poppins (Arrondi)</option>
+                  <option value="Cairo">Cairo (Arabe)</option>
+                  <option value="Tajawal">Tajawal (Arabe)</option>
+                  <option value="Inter">Inter (Épuré)</option>
+                </select>
+              </div>
+              <div class="flex flex-col justify-end">
+                <label class="flex items-center gap-2 text-xs font-medium cursor-pointer pb-2">
+                  <input type="checkbox" id="videoAudioChime" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Sons & Chimes Mélodiques</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Video Slides Quick Manager -->
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-sm text-cyan-400 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                <span>Photos & Séquences de la Vidéo</span>
+              </h4>
+              <span id="videoTotalDurationLabel" class="text-xs font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Durée totale : 12.0s</span>
+            </div>
+
+            <p class="text-xs text-gray-400">La vidéo utilise automatiquement vos captures configurées dans le studio graphique ou vos photos importées.</p>
+
+            <div id="videoSlidesList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Video Player & Export Column (Right) -->
+        <div class="lg:col-span-7 flex flex-col justify-center space-y-4">
+          <div class="glass-panel p-6 rounded-3xl space-y-4">
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+                <h4 class="font-bold text-sm text-gray-200">Lecteur Vidéo Interactif</h4>
+              </div>
+              <span id="videoResolutionBadge" class="text-xs px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-mono">1920 x 1080 px (16:9 Full HD)</span>
+            </div>
+
+            <!-- Canvas Video Viewport -->
+            <div id="videoViewportContainer" class="canvas-preview-box p-3 w-full aspect-[16/9] flex items-center justify-center transition-all duration-300">
+              <canvas id="videoCanvas" width="1920" height="1080" class="w-full h-full object-contain rounded-xl shadow-2xl"></canvas>
+            </div>
+
+            <!-- Video Timeline & Playback Bar -->
+            <div class="glass-panel p-3 rounded-xl flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <button id="videoPlayPauseBtn" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs flex items-center gap-2 hover:bg-cyan-400 transition">
+                  <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                  <span id="videoPlayPauseLabel">Lire l'Aperçu</span>
+                </button>
+                <button id="videoReplayBtn" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition" title="Recommencer">
+                  <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <!-- Time Counter -->
+              <div class="text-xs font-mono text-gray-300 flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span id="videoCurrentTime">00.0s</span>
+                <span>/</span>
+                <span id="videoTotalTime">12.0s</span>
+              </div>
+            </div>
+
+            <!-- Export Progress Indicator (Hidden by default) -->
+            <div id="videoExportProgressBox" class="hidden glass-panel p-4 rounded-xl space-y-2 border border-purple-500/40 bg-purple-950/20">
+              <div class="flex justify-between text-xs font-bold text-purple-300">
+                <span class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+                  <span>Génération & Encodage de la Vidéo HD...</span>
+                </span>
+                <span id="videoExportPercent">0%</span>
+              </div>
+              <div class="w-full h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                <div id="videoExportProgressBar" class="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400 transition-all duration-150" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Big Export CTA Button -->
+            <button id="exportVideoBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-400 text-white font-extrabold text-sm shadow-xl shadow-purple-600/25 hover:shadow-purple-600/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+              <i data-lucide="film" class="w-5 h-5"></i>
+              <span>GÉNÉRER & TÉLÉCHARGER LA VIDÉO PROMO HD (.WEBM / .MP4)</span>
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 3: MODULE TEXTES ET MÉTADONNÉES ASO -->
+    <!-- ======================================================================= -->
+    <div id="tab-aso" class="main-tab-pane space-y-6">
+      
+      <!-- Category & Language Bar -->
+      <div class="glass-panel p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Category Selector -->
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>Générateur par Thématique :</span>
+          </label>
+          <select id="asoCategorySelect" class="glass-input rounded-xl px-4 py-2 text-sm font-semibold">
+            <option value="islamic">🕋 Islamique & Prière (Adhan & Coran)</option>
+            <option value="weather">☀️ Météo & Radar (Live Forecast)</option>
+            <option value="productivity">🚀 Productivité & Tâches (To-Do & Habit)</option>
+            <option value="fitness">💪 Santé & Fitness (Coach Maison)</option>
+            <option value="education">📐 Éducation & Calculateurs</option>
+            <option value="finance">💰 Finance & Budget (Dépenses)</option>
+            <option value="ecommerce">🛍️ E-Commerce & Achats en Ligne</option>
+          </select>
+        </div>
+
+        <!-- Language Switcher Tabs -->
+        <div class="flex items-center gap-2">
+          <button data-lang="fr" class="aso-lang-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-black transition">
+            🇫🇷 Français
+          </button>
+          <button data-lang="ar" class="aso-lang-tab px-3.5 py-1.5 rounded-xl text-xs font-medium bg-gray-800 text-gray-400 hover:text-white transition font-cairo">
+            🇸🇦 العربية (RTL)
+          </button>
+          <button data-lang="en" class="aso-lang-tab px-3.5 py-1.5 rounded-xl text-xs font-medium bg-gray-800 text-gray-400 hover:text-white transition">
+            🇬🇧 English
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Main Metadata Form Fields with Strict Limits -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Form Fields (Left) -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- Field 1: App Name (Max 30 chars) -->
+          <div class="glass-panel p-6 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="tag" class="w-4 h-4"></i>
+                <span>Nom de l'Application</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <span id="countTitle" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 30</span>
+                <button data-target="asoAppTitle" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>Copier</span>
+                </button>
+              </div>
+            </div>
+            <input type="text" id="asoAppTitle" maxlength="40" class="w-full glass-input rounded-xl px-4 py-2.5 text-base font-bold text-white">
+            <p class="text-[11px] text-gray-400">Exigence Google Play : Maximum 30 caractères. Évitez les mots comme 'Gratuit', 'Meilleur' ou '#1'.</p>
+          </div>
+
+          <!-- Field 2: Short Description (Max 80 chars) -->
+          <div class="glass-panel p-6 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="align-left" class="w-4 h-4"></i>
+                <span>Brève Description</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <span id="countShort" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 80</span>
+                <button data-target="asoShortDesc" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>Copier</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="asoShortDesc" rows="2" maxlength="95" class="w-full glass-input rounded-xl px-4 py-2 text-sm leading-relaxed"></textarea>
+            <p class="text-[11px] text-gray-400">Exigence Google Play : Maximum 80 caractères. C'est la première phrase visible par l'utilisateur.</p>
+          </div>
+
+          <!-- Field 3: Full Description (Max 4000 chars) -->
+          <div class="glass-panel p-6 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                <span>Description Complète</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <span id="countFull" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 4000</span>
+                <button data-target="asoFullDesc" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>Copier</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="asoFullDesc" rows="12" maxlength="4200" class="w-full glass-input rounded-xl p-4 text-sm font-mono leading-relaxed"></textarea>
+            <p class="text-[11px] text-gray-400">Exigence Google Play : Maximum 4000 caractères. Structurez avec des puces, des emojis et des titres clairs.</p>
+          </div>
+
+          <!-- Field 4: Release Notes (Max 500 chars) -->
+          <div class="glass-panel p-6 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="git-commit" class="w-4 h-4"></i>
+                <span>Notes de Version (Release Notes)</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <span id="countRelease" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 500</span>
+                <button data-target="asoReleaseNotes" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>Copier</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="asoReleaseNotes" rows="4" maxlength="550" class="w-full glass-input rounded-xl px-4 py-2.5 text-sm"></textarea>
+          </div>
+
+        </div>
+
+        <!-- ASO Pro-Tips Sidebar (Right) -->
+        <div class="lg:col-span-4 space-y-6">
+          
+          <div class="glass-panel p-6 rounded-2xl space-y-4 border-l-4 border-cyan-400">
+            <h4 class="font-bold text-sm text-cyan-300 flex items-center gap-2">
+              <i data-lucide="lightbulb" class="w-4 h-4"></i>
+              <span>Conseils ASO Google Play</span>
+            </h4>
+            <ul class="text-xs text-gray-300 space-y-2.5 leading-relaxed">
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-400 font-bold">•</span>
+                <span><strong>Mots-clés dans le titre :</strong> Placez votre mot-clé principal directement dans les 30 caractères du nom.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-400 font-bold">•</span>
+                <span><strong>Densité optimale :</strong> Répétez naturellement vos 3 mots-clés phares 4 à 5 fois dans la description longue.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-rose-400 font-bold">⚠️</span>
+                <span><strong>Interdictions Google :</strong> Pas de MAJUSCULES abusives, pas de fausses allégations (#1, Meilleur) sous peine de refus.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-400 font-bold">🌍</span>
+                <span><strong>Localisation :</strong> Traduisez votre fiche en Arabe et Anglais pour démultiplier vos téléchargements.</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 3: GÉNÉRATEUR DE POLITIQUE DE CONFIDENTIALITÉ (RGPD / PLAY POLICY) -->
+    <!-- ======================================================================= -->
+    <div id="tab-privacy" class="main-tab-pane space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Form Settings (Left) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+              <i data-lucide="file-shield" class="w-5 h-5"></i>
+              <span>Informations de l'Application</span>
+            </h3>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Nom de l'Application</label>
+              <input type="text" id="ppAppName" value="Mon Application" class="w-full glass-input rounded-xl px-4 py-2 text-sm">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Nom du Développeur / Société</label>
+              <input type="text" id="ppDevName" value="Mon Studio Dev" class="w-full glass-input rounded-xl px-4 py-2 text-sm">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Email de Contact Support</label>
+              <input type="email" id="ppEmail" value="contact@monapp.com" class="w-full glass-input rounded-xl px-4 py-2 text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Type d'Application</label>
+                <select id="ppAppType" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="Gratuite (Free)">Gratuite</option>
+                  <option value="Gratuite avec Publicités">Avec Publicités</option>
+                  <option value="Freemium (Achats intégrés)">Freemium</option>
+                  <option value="Payante (Commercial)">Payante</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Public Enfants (&lt;13 ans)</label>
+                <select id="ppCoppa" class="w-full glass-input rounded-xl px-3 py-2 text-xs mt-1">
+                  <option value="no">Non ciblé (&ge; 13 ans)</option>
+                  <option value="yes">Oui (Conforme Famille/COPPA)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Permissions Used -->
+            <div class="space-y-2 pt-3 border-t border-white/5">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400">Permissions Utilisées</label>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permLocation" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Localisation (GPS)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permNotif" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Notifications</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permCamera" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Appareil Photo</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permStorage" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Stockage & Photos</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permMic" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Microphone</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="permContacts" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Contacts</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Third Party SDKs -->
+            <div class="space-y-2 pt-3 border-t border-white/5">
+              <label class="text-xs font-bold uppercase tracking-wider text-cyan-400">Services Tiers Intégrés</label>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkPlayServices" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Google Play Services</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkAdmob" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Google AdMob</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkFirebase" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Firebase Analytics</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkFacebook" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>Meta / Facebook SDK</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkOneSignal" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>OneSignal Push</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="sdkWeather" class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                  <span>OpenWeather API</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Privacy Preview & Code Output (Right) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <!-- View Switcher -->
+              <div class="flex items-center gap-2">
+                <button data-view="preview" class="pp-view-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-black">Aperçu Web</button>
+                <button data-view="html" class="pp-view-tab px-3.5 py-1.5 rounded-xl text-xs font-medium bg-gray-800 text-gray-400 hover:text-white">Code HTML</button>
+                <button data-view="md" class="pp-view-tab px-3.5 py-1.5 rounded-xl text-xs font-medium bg-gray-800 text-gray-400 hover:text-white">Markdown</button>
+              </div>
+
+              <!-- Export Buttons -->
+              <div class="flex items-center gap-2">
+                <button id="downloadPpHtmlBtn" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  <span>.HTML</span>
+                </button>
+                <button id="downloadPpMdBtn" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  <span>.MD</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- View Panes -->
+            <div id="pp-pane-preview" class="pp-view-pane active max-h-[500px] overflow-y-auto p-4 rounded-xl bg-slate-900 border border-white/10 text-xs text-gray-300 leading-relaxed space-y-3">
+              <div id="privacyPreviewHtml"></div>
+            </div>
+
+            <div id="pp-pane-html" class="pp-view-pane max-h-[500px] overflow-y-auto hidden">
+              <textarea id="privacyRawHtml" readonly rows="18" class="w-full glass-input rounded-xl p-4 text-xs font-mono"></textarea>
+            </div>
+
+            <div id="pp-pane-md" class="pp-view-pane max-h-[500px] overflow-y-auto hidden">
+              <textarea id="privacyRawMd" readonly rows="18" class="w-full glass-input rounded-xl p-4 text-xs font-mono"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 4: GUIDE & CHECK-LIST PLAY CONSOLE (20 TESTEURS / 14 JOURS) -->
+    <!-- ======================================================================= -->
+    <div id="tab-checklist" class="main-tab-pane space-y-6">
+      
+      <!-- Progress Bar Banner -->
+      <div class="glass-panel p-6 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="check-circle-2" class="w-5 h-5 text-cyan-400"></i>
+              <span>Progression de la Publication Google Play</span>
+            </h3>
+            <p class="text-xs text-gray-400">Sauvegardé automatiquement dans votre navigateur</p>
+          </div>
+          <span id="checklistProgressPercent" class="text-sm font-extrabold text-cyan-400 font-mono">0% Terminé</span>
+        </div>
+        <div class="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
+          <div id="checklistProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Interactive Checklist Items (Left) -->
+        <div class="lg:col-span-7 space-y-6" id="checklistContainer">
+          <!-- Dynamically populated by checklist-data.js -->
+        </div>
+
+        <!-- Guides & Tester Invitations (Right) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Tester Invitation Generator (20 Testers / 14 Days) -->
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-sm text-cyan-300 flex items-center gap-2">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span>Message d'Invitation Testeurs (20 Personnes)</span>
+              </h4>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <select id="inviteLangSelect" class="glass-input rounded-xl px-3 py-1.5 text-xs">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
+              <select id="inviteChannelSelect" class="glass-input rounded-xl px-3 py-1.5 text-xs">
+                <option value="whatsapp">WhatsApp / Telegram</option>
+                <option value="email">Email</option>
+              </select>
+            </div>
+
+            <textarea id="testerInviteTextarea" rows="8" readonly class="w-full glass-input rounded-xl p-3 text-xs leading-relaxed font-mono"></textarea>
+
+            <button id="copyInviteBtn" class="w-full py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 border border-cyan-500/30 text-cyan-400 text-xs font-bold flex items-center justify-center gap-2 transition">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copier le Message d'Invitation</span>
+            </button>
+          </div>
+
+          <!-- Data Safety Guide Cheat-Sheet -->
+          <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h4 class="font-bold text-sm text-cyan-300 flex items-center gap-2">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              <span>Guide Réponses 'Sécurité des données' (Data Safety)</span>
+            </h4>
+            <div class="space-y-3" id="dataSafetyGuideContainer">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 6: REDIMENSIONNEUR & GÉNÉRATEUR D'ASSETS D'APPLICATION (EXPO / ANDROID / IOS) -->
+    <!-- ======================================================================= -->
+    <div id="tab-resizer" class="main-tab-pane space-y-8">
+      
+      <!-- Module Header Banner -->
+      <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-[#0B0F19] to-cyan-950/30 flex flex-wrap items-center justify-between gap-6 shadow-2xl">
+        <div class="space-y-2 max-w-2xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">MULTI-PLATFORM ASSET STUDIO</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">EXPO & REACT NATIVE</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">ANDROID 13+ MATERIAL YOU</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white font-['Outfit']">
+            Redimensionneur & Générateur d'Assets d'Application
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+            Générez instantanément vos icônes adaptatives Android, vos écrans de chargement Splash HD, favicons web et redimensionnez vos images sur mesure avec respect des Safe Zones.
+          </p>
+        </div>
+
+        <!-- Quick Header Action Buttons -->
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="resizerImportFromStudioBtn" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] transition flex items-center gap-1.5" title="Transférer l'icône conçue dans le Studio Graphique">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>Importer du Studio (512x512)</span>
+          </button>
+          <button id="resizerDownloadAllZipBtn" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-purple-500/20 hover:scale-[1.02] transition flex items-center gap-1.5">
+            <i data-lucide="archive" class="w-4 h-4"></i>
+            <span>Télécharger Pack (.ZIP)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Workspace Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- LEFT COLUMN: CONTROLS & CONFIGURATION (5 COLS) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Card 1: Source Image Upload & Quick Dropzone -->
+          <div class="glass-panel p-5 rounded-2xl space-y-4 border border-white/10">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4 text-cyan-400"></i>
+                <span>Image Source Principale (Logo / Icône)</span>
+              </h3>
+              <span id="resizerSourceBadge" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Logo Démo</span>
+            </div>
+
+            <!-- Drag & Drop Dropzone -->
+            <label for="resizerMainImageUpload" class="border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 bg-cyan-950/20 hover:bg-cyan-950/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 transition">
+                <i data-lucide="image-plus" class="w-5 h-5"></i>
+              </div>
+              <p class="text-xs font-bold text-white">Cliquez ou Glissez votre logo ici</p>
+              <p class="text-[10px] text-gray-400 mt-0.5">PNG transparent, JPG ou SVG haute résolution recommandé</p>
+              <input type="file" id="resizerMainImageUpload" accept="image/*" class="hidden">
+            </label>
+
+            <!-- Quick Transfer Helper -->
+            <div class="flex items-center justify-between pt-1 text-[11px] text-gray-400">
+              <span>💡 Ou utilisez le design du Studio :</span>
+              <button id="resizerCopyFromStudioLink" class="text-cyan-400 hover:text-cyan-300 font-bold underline flex items-center gap-1">
+                <span>Copier l'icône 512x512</span>
+                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Settings Tabs -->
+          <div class="glass-panel p-5 rounded-2xl space-y-5 border border-white/10">
+            
+            <!-- Subtab Navigation -->
+            <div class="flex space-x-1 p-1 rounded-xl bg-gray-900/90 border border-white/5 overflow-x-auto scrollbar-none">
+              <button data-resizertab="adaptive" class="resizer-subtab-btn active px-3 py-2 rounded-lg text-xs font-bold bg-purple-500 text-white transition flex-1 text-center whitespace-nowrap">
+                📱 Adaptive Icon
+              </button>
+              <button data-resizertab="splash" class="resizer-subtab-btn px-3 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition flex-1 text-center whitespace-nowrap">
+                🚀 Splash 2048
+              </button>
+              <button data-resizertab="iconfav" class="resizer-subtab-btn px-3 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition flex-1 text-center whitespace-nowrap">
+                🖼️ Icon & Favicon
+              </button>
+              <button data-resizertab="custom" class="resizer-subtab-btn px-3 py-2 rounded-lg text-xs font-medium text-cyan-400 hover:text-cyan-300 transition flex-1 text-center whitespace-nowrap">
+                ✂️ Custom Resize
+              </button>
+            </div>
+
+            <!-- ------------------------------------------------------------- -->
+            <!-- SUBTAB A: ADAPTIVE ICON SETTINGS -->
+            <!-- ------------------------------------------------------------- -->
+            <div id="resizer-subtab-adaptive" class="resizer-subtab-pane space-y-4">
+              
+              <!-- 1. Background Settings -->
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-cyan-300">1. Arrière-Plan (android-icon-background.png)</span>
+                  <span class="text-[10px] text-gray-400 font-mono">1024x1024</span>
+                </div>
+
+                <!-- Background Type -->
+                <div class="grid grid-cols-4 gap-1.5 text-[11px]">
+                  <button data-bgtype="gradient" class="resizer-bgtype-btn active py-1.5 px-2 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-center">Dégradé</button>
+                  <button data-bgtype="solid" class="resizer-bgtype-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">Couleur</button>
+                  <button data-bgtype="transparent" class="resizer-bgtype-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">Transparent</button>
+                  <button data-bgtype="image" class="resizer-bgtype-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">Image</button>
+                </div>
+
+                <!-- Palette Presets -->
+                <div id="resizerBgPaletteGroup" class="space-y-2">
+                  <div class="grid grid-cols-5 gap-1.5">
+                    <button data-c1="#00F0FF" data-c2="#3B82F6" class="resizer-preset-color h-7 rounded-lg bg-gradient-to-r from-[#00F0FF] to-[#3B82F6] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                    <button data-c1="#8B5CF6" data-c2="#EC4899" class="resizer-preset-color h-7 rounded-lg bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                    <button data-c1="#10B981" data-c2="#065F46" class="resizer-preset-color h-7 rounded-lg bg-gradient-to-r from-[#10B981] to-[#065F46] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                    <button data-c1="#F59E0B" data-c2="#DC2626" class="resizer-preset-color h-7 rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#DC2626] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                    <button data-c1="#1E293B" data-c2="#0F172A" class="resizer-preset-color h-7 rounded-lg bg-gradient-to-r from-[#1E293B] to-[#0F172A] ring-1 ring-white/20 hover:scale-105 transition"></button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="text-[10px] text-gray-400">Couleur 1</label>
+                      <input type="color" id="resizerBgColor1" value="#00F0FF" class="w-full h-8 rounded-lg bg-transparent cursor-pointer">
+                    </div>
+                    <div id="resizerBgColor2Wrapper">
+                      <label class="text-[10px] text-gray-400">Couleur 2</label>
+                      <input type="color" id="resizerBgColor2" value="#3B82F6" class="w-full h-8 rounded-lg bg-transparent cursor-pointer">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Bg Image Upload (Hidden by default) -->
+                <div id="resizerCustomBgUploadGroup" class="hidden space-y-1">
+                  <label class="text-[10px] text-gray-400 font-bold">Image d'Arrière-Plan dédiée</label>
+                  <input type="file" id="resizerCustomBgFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:bg-cyan-500 file:text-black">
+                </div>
+              </div>
+
+              <!-- 2. Foreground Logo Controls -->
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-purple-300">2. Premier-Plan (android-icon-foreground.png)</span>
+                  <span class="text-[10px] text-gray-400 font-mono">1024x1024</span>
+                </div>
+
+                <!-- Scale Slider -->
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[11px] text-gray-400">
+                    <span>Échelle du logo (Safe Zone ~66%)</span>
+                    <span id="resizerFgScaleLabel" class="text-purple-400 font-bold">65%</span>
+                  </div>
+                  <input type="range" id="resizerFgScale" min="0.30" max="1.00" step="0.05" value="0.65" class="w-full accent-purple-400">
+                </div>
+
+                <!-- Safe Zone Guide Toggle -->
+                <div class="flex items-center justify-between pt-1">
+                  <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                    <input type="checkbox" id="resizerSafeZoneToggle" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                    <span>Afficher le guide Safe-Zone Android (66%)</span>
+                  </label>
+                  <span class="text-[10px] text-cyan-400">Recommandé</span>
+                </div>
+              </div>
+
+              <!-- 3. Monochrome Icon (Android 13+ Material You) -->
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-emerald-300">3. Monochrome (android-icon-monochrome.png)</span>
+                  <span class="text-[10px] text-emerald-400 font-bold">Material You</span>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="text-[10px] text-gray-400 font-bold uppercase">Mode de Conversion Monochrome</label>
+                  <select id="resizerMonoMode" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                    <option value="auto_white">Silhouette Blanche Automatique (Recommandé)</option>
+                    <option value="auto_black">Silhouette Noire Automatique</option>
+                    <option value="threshold">Seuil Noir & Blanc (Threshold)</option>
+                    <option value="grayscale">Niveaux de Gris (Grayscale)</option>
+                  </select>
+                </div>
+
+                <div id="resizerMonoThresholdGroup" class="hidden space-y-1">
+                  <div class="flex justify-between text-[11px] text-gray-400">
+                    <span>Sensibilité du seuil</span>
+                    <span id="resizerMonoThresholdLabel" class="text-emerald-400 font-bold">128</span>
+                  </div>
+                  <input type="range" id="resizerMonoThreshold" min="10" max="245" step="5" value="128" class="w-full accent-emerald-400">
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                  <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                    <input type="checkbox" id="resizerMonoInvert" class="w-4 h-4 rounded text-emerald-400 accent-emerald-400">
+                    <span>Inverser les contrastes</span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ------------------------------------------------------------- -->
+            <!-- SUBTAB B: SPLASH SCREEN SETTINGS -->
+            <!-- ------------------------------------------------------------- -->
+            <div id="resizer-subtab-splash" class="resizer-subtab-pane hidden space-y-4">
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-pink-300">Écran de Démarrage (splash-icon.png)</span>
+                  <span class="text-[10px] text-gray-400 font-mono">2048x2048</span>
+                </div>
+
+                <div>
+                  <label class="text-[10px] text-gray-400 font-bold">Couleur de Fond de l'Écran Splash</label>
+                  <div class="flex items-center gap-2 mt-1">
+                    <input type="color" id="resizerSplashBgColor" value="#0B0F19" class="w-10 h-9 rounded-lg bg-transparent cursor-pointer">
+                    <input type="text" id="resizerSplashBgColorText" value="#0B0F19" class="w-full glass-input rounded-xl px-3 py-1.5 text-xs font-mono">
+                  </div>
+                </div>
+
+                <!-- Logo Scale -->
+                <div class="space-y-1 pt-2 border-t border-white/5">
+                  <div class="flex justify-between text-[11px] text-gray-400">
+                    <span>Taille du Logo Centré</span>
+                    <span id="resizerSplashScaleLabel" class="text-pink-400 font-bold">35%</span>
+                  </div>
+                  <input type="range" id="resizerSplashScale" min="0.15" max="0.70" step="0.05" value="0.35" class="w-full accent-pink-400">
+                </div>
+
+                <!-- Phone Viewport Guide -->
+                <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                  <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                    <input type="checkbox" id="resizerSplashGuideToggle" class="w-4 h-4 rounded text-pink-400 accent-pink-400">
+                    <span>Afficher le cadrage smartphone (9:16)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- ------------------------------------------------------------- -->
+            <!-- SUBTAB C: ICON & FAVICON SETTINGS -->
+            <!-- ------------------------------------------------------------- -->
+            <div id="resizer-subtab-fav-icon" class="resizer-subtab-pane hidden space-y-4">
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-blue-300">Icône Universelle (icon.png)</span>
+                  <span class="text-[10px] text-gray-400 font-mono">1024x1024</span>
+                </div>
+                <p class="text-[11px] text-gray-400">Format universel fusionné pour iOS App Store, Google Play Store et Expo default icon.</p>
+                
+                <div>
+                  <label class="text-[10px] text-gray-400 font-bold uppercase">Masque de Prévisualisation</label>
+                  <div class="grid grid-cols-4 gap-1.5 mt-1 text-[11px]">
+                    <button data-iconmask="squircle" class="resizer-iconmask-btn active py-1.5 px-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold text-center">Squircle</button>
+                    <button data-iconmask="ios" class="resizer-iconmask-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">iOS</button>
+                    <button data-iconmask="circle" class="resizer-iconmask-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">Cercle</button>
+                    <button data-iconmask="square" class="resizer-iconmask-btn py-1.5 px-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white text-center">Carré</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-amber-300">Favicon Web (favicon.png)</span>
+                  <span class="text-[10px] text-gray-400 font-mono">48x48 px</span>
+                </div>
+                <p class="text-[11px] text-gray-400">Sous-échantillonnage haute netteté pour onglets de navigateurs et PWA.</p>
+              </div>
+            </div>
+
+            <!-- ------------------------------------------------------------- -->
+            <!-- SUBTAB D: CUSTOM IMAGE RESIZER -->
+            <!-- ------------------------------------------------------------- -->
+            <div id="resizer-subtab-custom" class="resizer-subtab-pane hidden space-y-4">
+              <div class="space-y-3 p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/30">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-cyan-300">Redimensionnement d'Image Libre</span>
+                  <span class="text-[10px] text-cyan-400 font-bold">CUSTOM RESIZER</span>
+                </div>
+
+                <!-- Custom Image Upload -->
+                <div>
+                  <label class="text-[10px] text-gray-400 font-bold">Image à redimensionner (optionnel si logo chargé)</label>
+                  <input type="file" id="resizerCustomInputFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:bg-cyan-500 file:text-black">
+                </div>
+
+                <!-- Dimensions Input -->
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label class="text-[10px] text-gray-400 font-bold">Largeur (px)</label>
+                    <input type="number" id="resizerCustomWidth" value="1024" min="16" max="4096" class="w-full glass-input rounded-xl px-3 py-1.5 text-xs font-mono">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-gray-400 font-bold">Hauteur (px)</label>
+                    <input type="number" id="resizerCustomHeight" value="1024" min="16" max="4096" class="w-full glass-input rounded-xl px-3 py-1.5 text-xs font-mono">
+                  </div>
+                </div>
+
+                <!-- Lock Aspect Ratio -->
+                <div class="flex items-center gap-2">
+                  <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                    <input type="checkbox" id="resizerCustomLockAspect" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+                    <span>Conserver le ratio de proportions (Lock Aspect Ratio)</span>
+                  </label>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="space-y-1.5 pt-1">
+                  <label class="text-[10px] text-gray-400 font-bold uppercase">Presets Rapides</label>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="1024" data-h="1024">1024×1024</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="2048" data-h="2048">2048×2048</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="512" data-h="512">512×512</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="1920" data-h="1080">1920×1080 (16:9)</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="1080" data-h="1920">1080×1920 (9:16)</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="1200" data-h="630">1200×630 (OG)</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="192" data-h="192">192×192</button>
+                    <button class="resizer-preset-btn px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[10px] font-mono" data-w="48" data-h="48">48×48</button>
+                  </div>
+                </div>
+
+                <!-- Mode & Format -->
+                <div class="grid grid-cols-2 gap-3 pt-1 border-t border-white/5">
+                  <div>
+                    <label class="text-[10px] text-gray-400 font-bold">Mode d'Ajustement</label>
+                    <select id="resizerCustomMode" class="w-full glass-input rounded-xl px-2 py-1.5 text-xs">
+                      <option value="contain">Contain (Conserver tout)</option>
+                      <option value="cover">Cover (Recadrage centré)</option>
+                      <option value="stretch">Stretch (Étirer)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-gray-400 font-bold">Format de Sortie</label>
+                    <select id="resizerCustomFormat" class="w-full glass-input rounded-xl px-2 py-1.5 text-xs">
+                      <option value="image/png">PNG (Sans perte)</option>
+                      <option value="image/jpeg">JPEG (Haute qualité)</option>
+                      <option value="image/webp">WebP (Optimisé)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Custom Action Button -->
+                <button id="resizerDownloadCustomBtn" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>Télécharger l'Image Personnalisée</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: LIVE INTERACTIVE ASSET GALLERY (7 COLS) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-extrabold text-white font-['Outfit']">Les 6 Formats d'Assets en Direct</h3>
+              <p class="text-xs text-gray-400">Aperçu interactif et téléchargement individuel ou en archive complète</p>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+              6 FICHIERS PRÊTS
+            </span>
+          </div>
+
+          <!-- ASSET CARDS GRID (6 CARDS) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- 1. android-icon-background.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                  <span class="font-bold text-xs text-white">android-icon-background</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-cyan-300">1024×1024</span>
+              </div>
+              
+              <div class="w-full aspect-square rounded-xl bg-[#111827] flex items-center justify-center p-2 overflow-hidden border border-white/5">
+                <canvas id="canvasAndroidBg" width="1024" height="1024" class="w-full h-full object-contain rounded-lg shadow-lg"></canvas>
+              </div>
+
+              <button id="downloadAndroidBgBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-cyan-500 hover:text-black border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>android-icon-background.png</span>
+              </button>
+            </div>
+
+            <!-- 2. android-icon-foreground.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                  <span class="font-bold text-xs text-white">android-icon-foreground</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-purple-300">1024×1024</span>
+              </div>
+              
+              <!-- Checkerboard transparent pattern background -->
+              <div class="w-full aspect-square rounded-xl bg-[#111827] canvas-preview-box flex items-center justify-center p-2 overflow-hidden border border-white/5 relative">
+                <canvas id="canvasAndroidFg" width="1024" height="1024" class="w-full h-full object-contain rounded-lg shadow-lg z-10"></canvas>
+              </div>
+
+              <button id="downloadAndroidFgBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-purple-500 hover:text-white border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>android-icon-foreground.png</span>
+              </button>
+            </div>
+
+            <!-- 3. android-icon-monochrome.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span class="font-bold text-xs text-white">android-icon-monochrome</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-emerald-300">1024×1024</span>
+              </div>
+              
+              <div class="w-full aspect-square rounded-xl bg-[#1E293B] flex items-center justify-center p-2 overflow-hidden border border-white/5">
+                <canvas id="canvasAndroidMono" width="1024" height="1024" class="w-full h-full object-contain rounded-lg shadow-lg"></canvas>
+              </div>
+
+              <button id="downloadAndroidMonoBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-emerald-500 hover:text-black border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>android-icon-monochrome.png</span>
+              </button>
+            </div>
+
+            <!-- 4. icon.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                  <span class="font-bold text-xs text-white">icon.png (Universal)</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-blue-300">1024×1024</span>
+              </div>
+              
+              <div class="w-full aspect-square rounded-xl bg-[#111827] flex items-center justify-center p-2 overflow-hidden border border-white/5">
+                <canvas id="canvasUniversalIcon" width="1024" height="1024" class="w-full h-full object-contain rounded-lg shadow-lg"></canvas>
+              </div>
+
+              <button id="downloadUniversalIconBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-blue-500 hover:text-black border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>icon.png</span>
+              </button>
+            </div>
+
+            <!-- 5. splash-icon.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-pink-400"></span>
+                  <span class="font-bold text-xs text-white">splash-icon.png</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-pink-300">2048×2048</span>
+              </div>
+              
+              <div class="w-full aspect-square rounded-xl bg-[#0B0F19] flex items-center justify-center p-2 overflow-hidden border border-white/5">
+                <canvas id="canvasSplashIcon" width="2048" height="2048" class="w-full h-full object-contain rounded-lg shadow-lg"></canvas>
+              </div>
+
+              <button id="downloadSplashIconBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-pink-500 hover:text-white border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>splash-icon.png</span>
+              </button>
+            </div>
+
+            <!-- 6. favicon.png -->
+            <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3 flex flex-col justify-between glass-card-hover">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                  <span class="font-bold text-xs text-white">favicon.png</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-amber-300">48×48 px</span>
+              </div>
+              
+              <div class="w-full aspect-square rounded-xl bg-[#111827] flex flex-col items-center justify-center p-3 overflow-hidden border border-white/5 space-y-3">
+                <!-- Browser Tab Simulation -->
+                <div class="w-full max-w-[200px] bg-gray-900 border border-white/10 rounded-t-lg p-1.5 flex items-center gap-2 text-[10px] text-gray-300 shadow">
+                  <canvas id="canvasFavicon" width="48" height="48" class="w-4 h-4 object-contain rounded-sm"></canvas>
+                  <span class="truncate">Mon App • Accueil</span>
+                  <i data-lucide="x" class="w-2.5 h-2.5 ml-auto text-gray-500"></i>
+                </div>
+                <div class="flex items-center gap-3 text-[11px] text-gray-400">
+                  <span>Taille réelle :</span>
+                  <canvas id="canvasFaviconReal" width="48" height="48" class="w-12 h-12 object-contain rounded-lg shadow-md border border-white/10"></canvas>
+                </div>
+              </div>
+
+              <button id="downloadFaviconBtn" class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-amber-500 hover:text-black border border-white/10 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>favicon.png</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Master Download ZIP Card -->
+          <div class="glass-panel p-6 rounded-3xl border border-purple-500/40 bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-cyan-900/30 space-y-4 shadow-xl">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="space-y-1 text-center sm:text-left">
+                <h4 class="text-base font-extrabold text-white font-['Outfit']">Pack Complet Mobile & Expo (.ZIP)</h4>
+                <p class="text-xs text-gray-300">
+                  Comprend les 6 formats exacts + dossiers mipmap Android + iOS AppIconset + fichier <code class="text-cyan-300 font-mono">app.json</code> prêt à copier.
+                </p>
+              </div>
+              <button id="resizerDownloadMasterZipBtn" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 text-white font-extrabold text-sm shadow-xl shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                <i data-lucide="package-check" class="w-5 h-5"></i>
+                <span>Télécharger Tout le Pack (.ZIP)</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 5: PACK GLOBAL (EXPORT MASTER ZIP) -->
+    <!-- ======================================================================= -->
+    <div id="tab-export" class="main-tab-pane space-y-8">
+      
+      <div class="glass-panel p-8 rounded-3xl text-center max-w-3xl mx-auto space-y-6">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center mx-auto shadow-2xl shadow-cyan-500/30 ring-4 ring-white/10">
+          <i data-lucide="package-check" class="w-10 h-10 text-black"></i>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white font-['Outfit']">Votre Pack de Publication Google Play est Prêt !</h2>
+          <p class="text-sm text-gray-400 max-w-lg mx-auto leading-relaxed">
+            Téléchargez en un seul clic l'ensemble des fichiers générés, parfaitement ordonnés et conformes aux exigences strictes de Google Play Console.
+          </p>
+        </div>
+
+        <!-- Summary Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
+          
+          <div class="glass-panel p-4 rounded-xl flex items-start gap-3">
+            <i data-lucide="image" class="w-5 h-5 text-cyan-400 shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-white">Assets Graphiques HD</h5>
+              <p class="text-[11px] text-gray-400">Icône 512x512, Feature Graphic 1024x500 et 4 à 8 Screenshots 1080x1920.</p>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-xl flex items-start gap-3">
+            <i data-lucide="clapperboard" class="w-5 h-5 text-pink-400 shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-white">Vidéo Promo Animée HD</h5>
+              <p class="text-[11px] text-gray-400">Trailer 1080p Paysage ou Shorts/Reels 9:16 avec effets et musique.</p>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-xl flex items-start gap-3">
+            <i data-lucide="file-text" class="w-5 h-5 text-purple-400 shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-white">Textes & Métadonnées ASO</h5>
+              <p class="text-[11px] text-gray-400">Titres, descriptions et notes de version en Français, Arabe et Anglais.</p>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-xl flex items-start gap-3">
+            <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-white">Politique de Confidentialité</h5>
+              <p class="text-[11px] text-gray-400">Fichiers HTML et Markdown prêts à être hébergés sur GitHub Pages ou votre site.</p>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-xl flex items-start gap-3 sm:col-span-2">
+            <i data-lucide="users" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-white">Guide Testeurs (20 personnes) & Data Safety</h5>
+              <p class="text-[11px] text-gray-400">Messages types d'invitation WhatsApp/Email et cheat-sheet de conformité.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Master Export CTA -->
+        <button id="masterExportBtn" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 text-black font-extrabold text-base shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+          <i data-lucide="archive" class="w-6 h-6"></i>
+          <span>GÉNÉRER ET TÉLÉCHARGER LE PACK COMPLET (.ZIP)</span>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 7: TABLEAU DE BORD D'ADMINISTRATION & GESTION DU SITE -->
+    <!-- ======================================================================= -->
+    <div id="tab-admin" class="main-tab-pane space-y-6">
+      
+      <!-- Admin Header & KPI Cards -->
+      <div class="glass-panel p-6 rounded-3xl space-y-6 border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-[#0B0F19] to-purple-950/20">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+              <i data-lucide="crown" class="w-6 h-6 text-black"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-extrabold text-white font-['Outfit']">Tableau de Bord d'Administration</h2>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">ADMIN PORTAL</span>
+              </div>
+              <p class="text-xs text-gray-400">Gestion des utilisateurs, des fonctionnalités futures, des accès et des métriques du site</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="adminExportDbBtn" class="px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-xs font-bold text-cyan-300 flex items-center gap-1.5 transition">
+              <i data-lucide="database" class="w-4 h-4"></i>
+              <span>Sauvegarder Base (.JSON)</span>
+            </button>
+            <button id="openAddUserModalBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold text-xs shadow-md shadow-amber-500/20 hover:scale-[1.02] transition flex items-center gap-1.5">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>+ Nouvel Utilisateur</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="glass-panel p-4 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400 text-xs font-medium">
+              <span>Total Inscrits</span>
+              <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i>
+            </div>
+            <div id="kpiTotalUsers" class="text-2xl font-black text-white font-['Outfit']">0</div>
+            <p class="text-[10px] text-emerald-400 font-bold">▲ +100% ce mois</p>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400 text-xs font-medium">
+              <span>Utilisateurs Actifs</span>
+              <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <div id="kpiActiveUsers" class="text-2xl font-black text-white font-['Outfit']">0</div>
+            <p class="text-[10px] text-gray-400">Comptes non suspendus</p>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400 text-xs font-medium">
+              <span>Abonnements PRO</span>
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+            </div>
+            <div id="kpiProUsers" class="text-2xl font-black text-amber-300 font-['Outfit']">0</div>
+            <p class="text-[10px] text-amber-400/80">Plan PRO & Enterprise</p>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400 text-xs font-medium">
+              <span>Assets Générés</span>
+              <i data-lucide="archive" class="w-4 h-4 text-purple-400"></i>
+            </div>
+            <div id="kpiTotalExports" class="text-2xl font-black text-white font-['Outfit']">0</div>
+            <p class="text-[10px] text-purple-300">Packs, Vidéos & Icônes</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Admin Subtabs Navigation -->
+      <div class="flex flex-wrap items-center gap-2 border-b border-white/10 pb-2">
+        <button data-admintab="upgrades" class="admin-sub-btn active px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-black flex items-center gap-2 transition">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span>Demandes d'Activation</span>
+          <span id="adminPendingBadge" class="px-1.5 py-0.2 rounded-full bg-black text-amber-300 font-extrabold text-[10px]">0</span>
+        </button>
+        <button data-admintab="users" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>Gestion des Utilisateurs</span>
+        </button>
+        <button data-admintab="pricing" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
+          <i data-lucide="tag" class="w-4 h-4"></i>
+          <span>Éditeur des Tarifs (5$ & 8$)</span>
+        </button>
+        <button data-admintab="features" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span>Roadmap & Fonctionnalités</span>
+        </button>
+        <button data-admintab="settings" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          <span>Paramètres & Annonces</span>
+        </button>
+        <button data-admintab="logs" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
+          <i data-lucide="activity" class="w-4 h-4"></i>
+          <span>Journal d'Activité</span>
+        </button>
+      </div>
+
+      <!-- ADMIN SUBTAB 0: PENDING UPGRADE REQUESTS (5$ & 8$) -->
+      <div id="admintab-upgrades" class="admin-sub-pane active space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-4 border border-amber-500/20">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+              <span>Demandes d'Activation des Abonnements en Attente</span>
+            </h3>
+            <span class="text-xs text-gray-400">Activez les accès premium des membres en 1 clic</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider">
+                  <th class="py-3 px-3">Utilisateur</th>
+                  <th class="py-3 px-3">Plan Demandé</th>
+                  <th class="py-3 px-3">Montant</th>
+                  <th class="py-3 px-3">Date</th>
+                  <th class="py-3 px-3 text-right">Action Admin</th>
+                </tr>
+              </thead>
+              <tbody id="adminUpgradesTableBody" class="divide-y divide-white/5">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SUBTAB 1: USERS MANAGEMENT -->
+      <div id="admintab-users" class="admin-sub-pane hidden space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+          
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="user-check" class="w-4 h-4 text-cyan-400"></i>
+              <span>Liste des Comptes Enregistrés</span>
+            </h3>
+            
+            <div class="w-full sm:w-64">
+              <input type="text" id="adminUserSearchInput" placeholder="Rechercher par nom ou email..." class="w-full glass-input rounded-xl px-3.5 py-1.5 text-xs">
+            </div>
+          </div>
+
+          <!-- Users Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider">
+                  <th class="py-3 px-3">Utilisateur</th>
+                  <th class="py-3 px-3">Rôle</th>
+                  <th class="py-3 px-3">Plan</th>
+                  <th class="py-3 px-3">Statut</th>
+                  <th class="py-3 px-3">Inscription</th>
+                  <th class="py-3 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody" class="divide-y divide-white/5">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ADMIN SUBTAB 2: FEATURE FLAGS & FUTURE ROADMAP -->
+      <div id="admintab-features" class="admin-sub-pane hidden space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-6">
+          
+          <div>
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
+              <i data-lucide="toggle-right" class="w-5 h-5 text-amber-400"></i>
+              <span>Activation / Désactivation des Fonctionnalités du Studio</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">Activez ou désactivez les nouveaux modules pour vos utilisateurs en temps réel.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Flag 1: AI ASO Generator -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">🤖 Générateur ASO par IA (GPT-4o / Claude)</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Génération automatique des descriptions Play Store avec mots-clés optimisés.</p>
+              </div>
+              <input type="checkbox" id="flagAiAso" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 2: iOS App Store Support -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">🍎 Support Apple App Store (iOS 6.7" & 6.5")</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Générer aussi les visuels et métadonnées pour l'App Store d'Apple.</p>
+              </div>
+              <input type="checkbox" id="flagIosSupport" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+      <!-- ADMIN SUBTAB 2: PRICING PLANS EDITOR (5$ & 8$) -->
+      <div id="admintab-pricing" class="admin-sub-pane hidden space-y-6">
+        <div class="glass-panel p-6 rounded-3xl space-y-6 border border-cyan-500/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-base text-white flex items-center gap-2">
+                <i data-lucide="tag" class="w-5 h-5 text-cyan-400"></i>
+                <span>Gestion & Édition des Offres Tarifaires (5$ / 8$)</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-1">Personnalisez les prix affichés sur la page d'accueil et les avantages inclus dans chaque abonnement.</p>
+            </div>
+            <button id="adminSavePricingBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-lg hover:scale-[1.02] transition">
+              Enregistrer les Tarifs
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Plan PRO Editor (5$) -->
+            <div class="glass-panel p-5 rounded-2xl border border-cyan-500/30 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300">PLAN PRO</span>
+                <div class="flex items-center gap-1">
+                  <span class="text-xs text-gray-400">Prix :</span>
+                  <input type="number" id="editProPrice" value="5" min="1" max="99" class="w-16 glass-input rounded-lg px-2 py-1 text-sm font-bold text-center text-cyan-400">
+                  <span class="text-xs text-gray-400">$ / mois</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Nom du Plan</label>
+                <input type="text" id="editProName" value="Plan Développeur PRO" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Description Courte</label>
+                <input type="text" id="editProDesc" value="La solution complète pour publier vos applications Android en toute conformité." class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Avantages (1 ligne = 1 avantage)</label>
+                <textarea id="editProFeatures" rows="6" class="w-full glass-input rounded-xl p-3 text-xs leading-relaxed font-mono"></textarea>
+              </div>
+            </div>
+
+            <!-- Plan VIP Editor (8$) -->
+            <div class="glass-panel p-5 rounded-2xl border border-purple-500/30 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300">PLAN VIP ULTIMATE</span>
+                <div class="flex items-center gap-1">
+                  <span class="text-xs text-gray-400">Prix :</span>
+                  <input type="number" id="editVipPrice" value="8" min="1" max="99" class="w-16 glass-input rounded-lg px-2 py-1 text-sm font-bold text-center text-purple-400">
+                  <span class="text-xs text-gray-400">$ / mois</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Nom du Plan</label>
+                <input type="text" id="editVipName" value="Plan Ultimate VIP & Studio Vidéo" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Description Courte</label>
+                <input type="text" id="editVipDesc" value="L'expérience ultime avec le studio vidéo trailer animé et toutes les options futures." class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase">Avantages (1 ligne = 1 avantage)</label>
+                <textarea id="editVipFeatures" rows="6" class="w-full glass-input rounded-xl p-3 text-xs leading-relaxed font-mono"></textarea>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SUBTAB 3: FEATURE FLAGS & FUTURE ROADMAP -->
+      <div id="admintab-features" class="admin-sub-pane hidden space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-6">
+          
+          <div>
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
+              <i data-lucide="toggle-right" class="w-5 h-5 text-amber-400"></i>
+              <span>Activation / Désactivation des Fonctionnalités du Studio</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">Activez ou désactivez les nouveaux modules pour vos utilisateurs en temps réel.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Flag 1: AI ASO Generator -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">🤖 Générateur ASO par IA (GPT-4o / Claude)</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Génération automatique des descriptions Play Store avec mots-clés optimisés.</p>
+              </div>
+              <input type="checkbox" id="flagAiAso" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 2: iOS App Store Support -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">🍎 Support Apple App Store (iOS 6.7" & 6.5")</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Générer aussi les visuels et métadonnées pour l'App Store d'Apple.</p>
+              </div>
+              <input type="checkbox" id="flagIosSupport" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 3: 4K Ultra-HD Video Export -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">🎥 Rendu Vidéo 4K Ultra-HD 60 FPS</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Moteur d'encodage vidéo haute fidélité pour les comptes PRO.</p>
+              </div>
+              <input type="checkbox" id="flagUltraHdVideo" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 4: Direct Google Play API Sync -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">☁️ Publication Directe API Play Console</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Téléversement automatique des assets et descriptions directement sur la console.</p>
+              </div>
+              <input type="checkbox" id="flagPlayApiSync" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 5: Stripe Paywall -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-white">💳 Passerelle Stripe & Abonnements PRO</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Activer la facturation mensuelle pour débloquer les exports illimités.</p>
+              </div>
+              <input type="checkbox" id="flagStripePayments" class="w-5 h-5 rounded text-cyan-400 accent-cyan-400 cursor-pointer">
+            </div>
+
+            <!-- Flag 6: Global Maintenance Mode -->
+            <div class="glass-panel p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 flex items-start justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-xs text-rose-300">🔒 Mode Maintenance du Site</h4>
+                <p class="text-[11px] text-gray-400 mt-0.5">Affiche un écran de maintenance temporaire pour les utilisateurs non-admins.</p>
+              </div>
+              <input type="checkbox" id="flagMaintenanceMode" class="w-5 h-5 rounded text-rose-500 accent-rose-500 cursor-pointer">
+            </div>
+
+          </div>
+
+          <button id="adminSaveFeatureFlagsBtn" class="px-6 py-2.5 rounded-xl bg-cyan-500 text-black font-bold text-xs hover:bg-cyan-400 transition">
+            Enregistrer les Préférences des Fonctionnalités
+          </button>
+
+        </div>
+      </div>
+
+      <!-- ADMIN SUBTAB 4: SETTINGS & ANNOUNCEMENTS -->
+      <div id="admintab-settings" class="admin-sub-pane hidden space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+          <h3 class="font-bold text-base text-white flex items-center gap-2">
+            <i data-lucide="megaphone" class="w-5 h-5 text-purple-400"></i>
+            <span>Bannière d'Annonce & Paramètres Généraux</span>
+          </h3>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Message Diffusé en Haut du Site</label>
+            <input type="text" id="adminAnnouncementInput" value="✨ Bienvenue sur Launch Studio ! Accès Démo actif. Contactez l'admin pour activer vos téléchargements illimités." class="w-full glass-input rounded-xl px-4 py-2 text-xs">
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
+              <input type="checkbox" id="adminShowAnnouncementCheck" checked class="w-4 h-4 rounded text-cyan-400 accent-cyan-400">
+              <span>Afficher le bandeau d'annonce pour tous les visiteurs</span>
+            </label>
+          </div>
+
+          <div class="pt-4 border-t border-white/10">
+            <button id="adminSaveSettingsBtn" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-400 text-black font-bold text-xs hover:scale-[1.01] transition">
+              Mettre à Jour les Paramètres
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SUBTAB 5: ACTIVITY LOGS -->
+      <div id="admintab-logs" class="admin-sub-pane hidden space-y-4">
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+          <h3 class="font-bold text-base text-white flex items-center gap-2">
+            <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
+            <span>Journal d'Activité en Temps Réel</span>
+          </h3>
+          <div id="adminActivityLogsList" class="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: DEMANDE D'ACTIVATION PREMIUM (UPGRADE MODAL POUR FREE USERS) -->
+  <!-- ========================================================================= -->
+  <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-amber-500/40 shadow-2xl relative space-y-6 animate-in fade-in zoom-in duration-200">
+      
+      <button id="closeUpgradeModalBtn" class="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30">
+          <i data-lucide="lock" class="w-7 h-7 text-black"></i>
+        </div>
+        <h3 class="text-xl font-black text-white font-['Outfit']">Téléchargement Réservé aux Membres Premium</h3>
+        <p class="text-xs text-gray-300">
+          Votre compte est actuellement en mode <span class="font-bold text-cyan-300">Accès Démo Gratuit</span>. Pour débloquer le téléchargement des assets HD, vidéos et packs complets, demandez l'activation de votre abonnement.
+        </p>
+      </div>
+
+      <!-- Plan Choice Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        
+        <div class="glass-panel p-4 rounded-2xl border border-cyan-500/40 space-y-3 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-cyan-300">Plan PRO</span>
+              <span id="upgradeProPriceBadge" class="text-sm font-black text-white font-['Outfit']">5$ / mois</span>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-1">Téléchargements illimités Icônes, Features, Screenshots & Pack ZIP.</p>
+          </div>
+          <button id="requestProUpgradeBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs hover:scale-[1.01] transition">
+            Demander Activation PRO (5$)
+          </button>
+        </div>
+
+        <div class="glass-panel p-4 rounded-2xl border border-purple-500/40 space-y-3 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-300">Plan VIP</span>
+              <span id="upgradeVipPriceBadge" class="text-sm font-black text-white font-['Outfit']">8$ / mois</span>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-1">Tout PRO + Studio Vidéo Trailer 1080p animé & futures options IA.</p>
+          </div>
+          <button id="requestVipUpgradeBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-extrabold text-xs hover:scale-[1.01] transition">
+            Demander Activation VIP (8$)
+          </button>
+        </div>
+
+      </div>
+
+      <p class="text-[10px] text-gray-400 text-center">
+        💡 En cliquant, une notification sera immédiatement transmise à l'administrateur pour activer votre accès.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: AUTHENTIFICATION (LOGIN / REGISTER) -->
+  <!-- ========================================================================= -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-md p-6 sm:p-8 rounded-3xl border border-cyan-500/30 shadow-2xl relative space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <!-- Close Button -->
+      <button id="closeAuthModalBtn" class="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/30">
+          <i data-lucide="lock" class="w-6 h-6 text-black"></i>
+        </div>
+        <h3 id="authModalTitle" class="text-xl font-extrabold text-white font-['Outfit']">Accès à Google Play Launch Studio</h3>
+        <p class="text-xs text-gray-400">Inscrivez-vous pour créer vos ressources de publication</p>
+      </div>
+
+      <!-- Auth Mode Switcher -->
+      <div class="grid grid-cols-2 p-1 rounded-xl bg-gray-900 border border-white/10 text-xs font-bold">
+        <button id="authSwitchLoginBtn" class="py-2 rounded-lg bg-cyan-500 text-black transition">Connexion</button>
+        <button id="authSwitchRegisterBtn" class="py-2 rounded-lg text-gray-400 hover:text-white transition">Inscription</button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="authForm" class="space-y-3.5">
+        
+        <div id="authNameField" class="space-y-1 hidden">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Votre Nom Complet</label>
+          <input type="text" id="authInputName" placeholder="Ex: Alex Dupont" class="w-full glass-input rounded-xl px-4 py-2.5 text-xs">
+        </div>
+
+        <div id="authPlanField" class="space-y-1 hidden">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Plan Souhaité</label>
+          <select id="authInputPlan" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+            <option value="Gratuit">Découverte (Accès Démo Gratuit)</option>
+            <option value="PRO" selected>Plan Développeur PRO (5$/mois)</option>
+            <option value="VIP">Plan Ultimate VIP & Vidéo (8$/mois)</option>
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Adresse Email</label>
+          <input type="email" id="authInputEmail" placeholder="votre.email@example.com" required class="w-full glass-input rounded-xl px-4 py-2.5 text-xs">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Mot de Passe</label>
+          <input type="password" id="authInputPassword" placeholder="••••••••" required class="w-full glass-input rounded-xl px-4 py-2.5 text-xs">
+        </div>
+
+        <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.01] transition">
+          Se Connecter
+        </button>
+
+      </form>
+
+      <!-- Quick Test Accounts -->
+      <div class="pt-3 border-t border-white/10 space-y-2">
+        <p class="text-[10px] text-gray-400 text-center font-bold uppercase tracking-wider">Comptes de Test Rapides :</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="quickLoginAdminBtn" class="py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-[11px] font-bold transition flex items-center justify-center gap-1">
+            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+            <span>👑 Compte Admin</span>
+          </button>
+          <button id="quickLoginUserBtn" class="py-2 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 text-[11px] font-bold transition flex items-center justify-center gap-1">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+            <span>👤 Développeur PRO (5$)</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: AJOUTER UN UTILISATEUR (ADMIN) -->
+  <!-- ========================================================================= -->
+  <div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-md p-6 rounded-3xl border border-amber-500/30 shadow-2xl relative space-y-4">
+      
+      <button id="closeAddUserModalBtn" class="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+        <i data-lucide="user-plus" class="w-5 h-5"></i>
+        <span>Créer un Nouvel Utilisateur</span>
+      </h3>
+
+      <form id="addUserForm" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold text-gray-400">Nom</label>
+          <input type="text" id="newUserName" required class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-400">Email</label>
+          <input type="email" id="newUserEmail" required class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-400">Mot de Passe</label>
+          <input type="password" id="newUserPassword" required value="user123" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-gray-400">Rôle</label>
+            <select id="newUserRole" class="w-full glass-input rounded-xl px-2 py-1.5 text-xs">
+              <option value="user">Utilisateur (Standard)</option>
+              <option value="admin">Administrateur</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-400">Plan</label>
+            <select id="newUserPlan" class="w-full glass-input rounded-xl px-2 py-1.5 text-xs">
+              <option value="Gratuit">Gratuit (Démo)</option>
+              <option value="PRO" selected>PRO (5$/mois)</option>
+              <option value="VIP">VIP (8$/mois)</option>
+              <option value="Enterprise">Enterprise</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 text-black font-bold text-xs hover:bg-amber-400 transition mt-2">
+          Créer l'Utilisateur
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FOOTER -->
+  <!-- ========================================================================= -->
+  <footer class="border-t border-white/10 py-6 bg-[#0B0F19]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <span>Google Play Launch Studio - 100% Client-Side & Privé (Aucune donnée envoyée à un serveur)</span>
+      </div>
+      <div>
+        <span>Créé pour les développeurs indépendants & créateurs d'applications mobiles</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/pricing-manager.js?v=3"></script>
+  <script src="js/auth.js?v=3"></script>
+  <script src="js/admin-dashboard.js?v=3"></script>
+  <script src="js/aso-templates.js?v=3"></script>
+  <script src="js/privacy-generator.js?v=3"></script>
+  <script src="js/checklist-data.js?v=3"></script>
+  <script src="js/canvas-engine.js?v=3"></script>
+  <script src="js/asset-resizer.js?v=3"></script>
+  <script src="js/video-engine.js?v=3"></script>
+  <script src="js/exporter.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
+
+  <!-- Initialize Lucide Icons -->
+  <script>
+    lucide.createIcons();
+    // Re-render icons on tab changes
+    document.addEventListener('click', () => {
+      setTimeout(() => lucide.createIcons(), 50);
+    });
+  </script>
+</body>
+</html>

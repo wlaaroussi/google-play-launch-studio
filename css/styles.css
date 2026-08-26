@@ -1,0 +1,353 @@
+/* ==========================================================================
+   Google Play Launch Studio - Modern Dark Theme & Glassmorphism Styles
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+:root {
+  --bg-dark: #0B0F19;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-border: rgba(255, 255, 255, 0.08);
+  --accent-cyan: #00F0FF;
+  --accent-blue: #3B82F6;
+  --accent-purple: #8B5CF6;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-rose: #F43F5E;
+  --text-main: #F3F4F6;
+  --text-muted: #9CA3AF;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.04) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-hover:hover {
+  border-color: rgba(0, 240, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px 0 rgba(0, 240, 255, 0.12);
+}
+
+.glass-input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F3F4F6;
+  transition: all 0.2s ease;
+}
+.glass-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+  outline: none;
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 4px;
+  border: 2px solid #0B0F19;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Custom Typography & RTL support */
+.font-cairo {
+  font-family: 'Cairo', sans-serif;
+}
+.font-tajawal {
+  font-family: 'Tajawal', sans-serif;
+}
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Gradient Texts & Badges */
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #00F0FF 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-purple {
+  background: linear-gradient(135deg, #A855F7 0%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glowing Neon Elements */
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+}
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+}
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+}
+
+/* Custom Radio & Checkbox styling */
+.custom-checkbox:checked {
+  background-color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+/* Canvas Viewport Containers */
+.canvas-preview-box {
+  background: 
+    radial-gradient(#1E293B 1px, transparent 1px),
+    #0F172A;
+  background-size: 16px 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Smooth Tabs & Sub-panes Transitions */
+.main-tab-pane,
+.tab-pane {
+  display: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.main-tab-pane.active,
+.tab-pane.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.graphics-sub-pane {
+  display: none !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.graphics-sub-pane.active {
+  display: grid !important;
+  opacity: 1;
+}
+
+.admin-sub-pane {
+  display: none;
+}
+
+.admin-sub-pane.active,
+.admin-sub-pane:not(.hidden) {
+  display: block;
+}
+
+.resizer-subtab-pane.hidden {
+  display: none !important;
+}
+
+/* Character Counter Progress */
+.char-counter-badge {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pulse animation for badges */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s infinite ease-in-out;
+}
+
+/* Tooltip styles */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #E5E7EB;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Checkerboard transparency pattern */
+.checkerboard-pattern {
+  background-color: #0B0F19;
+  background-image: 
+    linear-gradient(45deg, #1A2234 25%, transparent 25%),
+    linear-gradient(-45deg, #1A2234 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #1A2234 75%),
+    linear-gradient(-45deg, transparent 75%, #1A2234 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* ==========================================================================
+   Sidebar (Barre Latérale) Navigation Styles
+   ========================================================================== */
+#appSidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 280px;
+}
+
+/* Collapsed Sidebar on Desktop */
+#appSidebar.sidebar-collapsed {
+  width: 76px;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-label,
+#appSidebar.sidebar-collapsed .sidebar-badge,
+#appSidebar.sidebar-collapsed .sidebar-header-text,
+#appSidebar.sidebar-collapsed .sidebar-category-header,
+#appSidebar.sidebar-collapsed .sidebar-submenu,
+#appSidebar.sidebar-collapsed .sidebar-footer-text,
+#appSidebar.sidebar-collapsed .sidebar-chevron {
+  display: none !important;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-nav-btn {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-nav-btn i {
+  margin: 0 auto;
+}
+
+/* Active Sidebar Navigation Item */
+.sidebar-nav-btn {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav-btn.active {
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.14) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border-color: rgba(0, 240, 255, 0.35);
+  color: #00F0FF !important;
+  box-shadow: inset 0 0 16px rgba(0, 240, 255, 0.06);
+}
+
+.sidebar-nav-btn.active::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.sidebar-nav-btn.active i {
+  color: #00F0FF;
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.4));
+}
+
+/* Sidebar Submenus */
+.sidebar-submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  opacity: 0;
+}
+
+.sidebar-submenu.open {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.sidebar-subnav-btn {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.sidebar-subnav-btn.active {
+  background: rgba(0, 240, 255, 0.12);
+  color: #00F0FF;
+  font-weight: 700;
+  border-left: 2px solid #00F0FF;
+}
+
+/* Mobile Sidebar Drawer */
+@media (max-width: 1023px) {
+  #appSidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    width: 290px !important;
+  }
+
+  #appSidebar.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+#sidebarBackdrop {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  google-play-launch-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: play_launch_studio
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
