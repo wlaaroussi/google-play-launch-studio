@@ -58,7 +58,7 @@ async function initDatabase() {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
       plan TEXT NOT NULL DEFAULT 'Gratuit',
-      status TEXT NOT NULL DEFAULT 'active',
+      status TEXT NOT NULL DEFAULT 'pending',
       projects_count INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -88,6 +88,17 @@ async function initDatabase() {
       user_name TEXT,
       description TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 3b. User Service Access Table (per-user, per-service toggles)
+  await db.runAsync(`
+    CREATE TABLE IF NOT EXISTS user_service_access (
+      user_id TEXT NOT NULL,
+      service_key TEXT NOT NULL,
+      is_enabled INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, service_key),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
 
@@ -134,15 +145,28 @@ async function initDatabase() {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-30 days'))
     `, ['usr_admin_001', 'Super Admin', 'admin@launchstudio.com', hashAdmin, 'admin', 'Enterprise', 'active', 18]);
 
+    // Seed full service access for admin
+    const allServices = ['graphics', 'video', 'aso', 'privacy', 'checklist', 'resizer', 'export'];
+    for (const svc of allServices) {
+      await db.runAsync(`INSERT OR IGNORE INTO user_service_access (user_id, service_key, is_enabled) VALUES (?, ?, 1)`, ['usr_admin_001', svc]);
+    }
+
     await db.runAsync(`
       INSERT INTO users (id, name, email, password_hash, role, plan, status, projects_count, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-12 days'))
     `, ['usr_demo_002', 'Youssef Dev', 'youssef@example.com', hashUser, 'user', 'PRO', 'active', 6]);
 
+    // Seed PRO service access for Youssef
+    for (const svc of ['graphics', 'video', 'aso', 'privacy', 'checklist', 'resizer', 'export']) {
+      await db.runAsync(`INSERT OR IGNORE INTO user_service_access (user_id, service_key, is_enabled) VALUES (?, ?, 1)`, ['usr_demo_002', svc]);
+    }
+
     await db.runAsync(`
       INSERT INTO users (id, name, email, password_hash, role, plan, status, projects_count, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-3 days'))
-    `, ['usr_demo_003', 'Sarah Apps', 'sarah@example.com', hashUser, 'user', 'Gratuit', 'active', 2]);
+    `, ['usr_demo_003', 'Sarah Apps', 'sarah@example.com', hashUser, 'user', 'Gratuit', 'pending', 2]);
+
+    // Sarah is pending - no service access yet
 
     // Seed Sample Upgrade Request
     await db.runAsync(`

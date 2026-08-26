@@ -184,6 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const graphicsSubBtns = document.querySelectorAll('.graphics-sub-btn');
   const graphicsSubPanes = document.querySelectorAll('.graphics-sub-pane');
 
+  // Map tab IDs to service keys
+  const TAB_SERVICE_MAP = {
+    graphics: 'graphics',
+    video: 'video',
+    aso: 'aso',
+    privacy: 'privacy',
+    checklist: 'checklist',
+    resizer: 'resizer',
+    export: 'export'
+  };
+
   // Unified Tab & Sub-tab Switcher
   function switchTab(tabId, subTabId = null) {
     if (!tabId) return;
@@ -192,6 +203,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabId === 'admin' && (!window.AuthManager || !AuthManager.isAdmin())) {
       showToast("🔒 Accès refusé : Cet espace est strictement réservé aux Administrateurs.", "error");
       return;
+    }
+
+    // Service Access Guard for all modules (except landing and admin)
+    const serviceKey = TAB_SERVICE_MAP[tabId];
+    if (serviceKey && tabId !== 'landing') {
+      if (!window.AuthManager || !AuthManager.getCurrentUser()) {
+        // Not logged in — prompt login/register
+        showToast("🔒 Veuillez vous inscrire pour accéder aux services.", "info");
+        const authModal = document.getElementById('authModal');
+        if (authModal) authModal.classList.remove('hidden');
+        return;
+      }
+      if (AuthManager.isPending()) {
+        showToast("⏳ Votre compte est en attente d'approbation par l'administrateur.", "info");
+        return;
+      }
+      if (!AuthManager.canAccessService(serviceKey)) {
+        showToast(`🔒 Service non activé pour votre compte. Contactez l'administrateur.`, "error");
+        return;
+      }
     }
 
     AppState.activeTab = tabId;
@@ -1387,7 +1418,29 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateAuthUI() {
     const currentUser = window.AuthManager ? AuthManager.getCurrentUser() : null;
     const adminSidebarGroup = document.getElementById('adminSidebarGroup');
-    const sidebarAdminBadge = document.getElementById('sidebarAdminBadge');
+    const pendingOverlay = document.getElementById('pendingAccountOverlay');
+    const pendingUserNameEl = document.getElementById('pendingUserName');
+    const appSidebar = document.getElementById('appSidebar');
+    const mainEl = document.querySelector('main');
+
+    if (currentUser && currentUser.status === 'pending') {
+      // Show pending overlay, hide sidebar & main content
+      if (pendingOverlay) { pendingOverlay.classList.remove('hidden'); pendingOverlay.classList.add('flex'); }
+      if (userProfileHeaderPill) userProfileHeaderPill.classList.remove('hidden');
+      if (openAuthModalBtn) openAuthModalBtn.classList.add('hidden');
+      if (userAvatarLetter) userAvatarLetter.innerText = (currentUser.name || 'U').charAt(0).toUpperCase();
+      if (userNameLabel) userNameLabel.innerText = currentUser.name || 'Utilisateur';
+      if (userEmailLabel) userEmailLabel.innerText = currentUser.email;
+      if (pendingUserNameEl) pendingUserNameEl.textContent = currentUser.name || 'Visiteur';
+      if (appSidebar) appSidebar.classList.add('hidden');
+      if (adminNavTabBtn) adminNavTabBtn.classList.add('hidden');
+      if (adminSidebarGroup) adminSidebarGroup.classList.add('hidden');
+      return;
+    }
+
+    // Hide pending overlay for approved/logged-out users
+    if (pendingOverlay) { pendingOverlay.classList.add('hidden'); pendingOverlay.classList.remove('flex'); }
+    if (appSidebar) appSidebar.classList.remove('hidden');
 
     if (currentUser) {
       if (userProfileHeaderPill) userProfileHeaderPill.classList.remove('hidden');
@@ -1462,20 +1515,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const plan = document.getElementById('authInputPlan')?.value || 'Gratuit';
         const res = await AuthManager.register(name, email, password, plan);
         if (res.success) {
-          showToast(`🎉 Bienvenue ${res.user.name} ! Compte créé avec succès.`);
           authModal.classList.add('hidden');
-          updateAuthUI();
-          // Switch to graphics studio
-          document.querySelector('[data-tab="graphics"]')?.click();
+          if (res.pending) {
+            // Show pending screen instead of entering the app
+            const pendingOverlay = document.getElementById('pendingAccountOverlay');
+            const pendingUserNameEl = document.getElementById('pendingUserName');
+            if (pendingOverlay) { pendingOverlay.classList.remove('hidden'); pendingOverlay.classList.add('flex'); }
+            if (pendingUserNameEl) pendingUserNameEl.textContent = name;
+            showToast('✅ Compte créé ! En attente de validation par l\'administrateur.', 'info');
+          } else {
+            showToast(`🎉 Bienvenue ! Compte créé avec succès.`);
+            updateAuthUI();
+          }
         } else {
           showToast(res.message, "error");
         }
       } else {
         const res = await AuthManager.login(email, password);
         if (res.success) {
-          showToast(`👋 Heureux de vous revoir, ${res.user.name} !`);
           authModal.classList.add('hidden');
           updateAuthUI();
+          if (res.user && res.user.status !== 'pending') {
+            showToast(`👋 Heureux de vous revoir, ${res.user.name} !`);
+          }
         } else {
           showToast(res.message, "error");
         }
@@ -1512,6 +1574,18 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast("Déconnexion réussie.");
       updateAuthUI();
       document.querySelector('[data-tab="landing"]')?.click();
+    });
+  }
+
+  // Pending overlay logout button
+  const pendingLogoutBtn = document.getElementById('pendingLogoutBtn');
+  if (pendingLogoutBtn) {
+    pendingLogoutBtn.addEventListener('click', () => {
+      AuthManager.logout();
+      const pendingOverlay = document.getElementById('pendingAccountOverlay');
+      if (pendingOverlay) { pendingOverlay.classList.add('hidden'); pendingOverlay.classList.remove('flex'); }
+      updateAuthUI();
+      showToast("Déconnexion réussie.");
     });
   }
 
@@ -1756,7 +1830,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Pending Upgrades Table
     await renderAdminUpgradesTable();
 
-    // 3. Users Table
+    // 3. Users Table (with pending section)
     await renderAdminUsersTable();
 
     // 4. Load Pricing into Editor
@@ -1848,11 +1922,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const users = await AuthManager.getUsers();
     const query = filter.trim().toLowerCase();
-    const filteredUsers = query 
+    const allFiltered = query
       ? users.filter(u => (u.name || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query))
       : users;
 
-    filteredUsers.forEach(u => {
+    // Separate pending and non-pending
+    const pendingUsers = allFiltered.filter(u => u.status === 'pending');
+    const activeUsers = allFiltered.filter(u => u.status !== 'pending');
+
+    // Render pending users panel
+    const pendingContainer = document.getElementById('pendingUsersContainer');
+    const pendingCountEl = document.getElementById('pendingUsersCount');
+    const pendingBadge = document.getElementById('adminPendingUsersBadge');
+    if (pendingCountEl) pendingCountEl.textContent = pendingUsers.length;
+    if (pendingBadge) {
+      if (pendingUsers.length > 0) {
+        pendingBadge.textContent = pendingUsers.length;
+        pendingBadge.classList.remove('hidden');
+      } else {
+        pendingBadge.classList.add('hidden');
+      }
+    }
+
+    if (pendingContainer) {
+      if (pendingUsers.length === 0) {
+        pendingContainer.innerHTML = `<p class="text-xs text-gray-500 py-2">Aucun compte en attente d'approbation.</p>`;
+      } else {
+        pendingContainer.innerHTML = '';
+        pendingUsers.forEach(pu => {
+          const card = document.createElement('div');
+          card.className = 'flex items-center justify-between gap-4 bg-gray-900/60 border border-rose-500/20 rounded-xl p-3';
+          card.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center font-bold text-[11px] text-black">${(pu.name || 'U').charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="font-bold text-white text-xs">${pu.name}</div>
+                <div class="text-[10px] text-gray-400 font-mono">${pu.email} — Plan ${pu.plan}</div>
+              </div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button data-userid="${pu.id}" data-username="${pu.name}" class="admin-approve-user-btn px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-black font-extrabold text-xs flex items-center gap-1 hover:scale-105 transition">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                Approuver
+              </button>
+              <button data-userid="${pu.id}" data-username="${pu.email}" class="admin-manage-services-btn px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1 hover:bg-amber-500/30 transition">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                Gérer accès
+              </button>
+            </div>
+          `;
+          pendingContainer.appendChild(card);
+        });
+      }
+    }
+
+    // Render active users in main table
+    activeUsers.forEach(u => {
+      const statusColor = u.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300';
+      const statusDot = u.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400';
+      const statusLabel = u.status === 'active' ? 'Actif' : (u.status === 'suspended' ? 'Suspendu' : u.status);
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-white/5 transition';
       tr.innerHTML = `
@@ -1878,9 +2006,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </span>
         </td>
         <td class="py-3 px-3">
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
-            <span class="w-1.5 h-1.5 rounded-full ${u.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}"></span>
-            ${u.status === 'active' ? 'Actif' : 'Suspendu'}
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${statusColor}">
+            <span class="w-1.5 h-1.5 rounded-full ${statusDot}"></span>
+            ${statusLabel}
           </span>
         </td>
         <td class="py-3 px-3 text-[11px] text-gray-400 font-mono">
@@ -1888,6 +2016,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3 text-right">
           <div class="flex items-center justify-end gap-1.5">
+            <button data-userid="${u.id}" data-username="${u.email}" class="admin-manage-services-btn p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 transition" title="Gérer les accès services">
+              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            </button>
             <button data-userid="${u.id}" class="admin-toggle-status-btn p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 ${u.status === 'active' ? 'text-rose-400' : 'text-emerald-400'} transition" title="${u.status === 'active' ? 'Suspendre' : 'Réactiver'}">
               <i data-lucide="${u.status === 'active' ? 'ban' : 'check'}" class="w-3.5 h-3.5"></i>
             </button>
@@ -1900,7 +2031,37 @@ document.addEventListener('DOMContentLoaded', () => {
       adminUsersTableBody.appendChild(tr);
     });
 
-    // Attach listeners
+    if (activeUsers.length === 0) {
+      adminUsersTableBody.innerHTML = `
+        <tr><td colspan="6" class="py-6 text-center text-gray-500">Aucun utilisateur actif trouvé.</td></tr>
+      `;
+    }
+
+    // Attach: Approve user
+    document.querySelectorAll('.admin-approve-user-btn').forEach(b => {
+      b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-userid');
+        const name = b.getAttribute('data-username');
+        const res = await AuthManager.approveUser(id);
+        if (res.success) {
+          showToast(`✅ ${name} approuvé ! Son compte est maintenant actif.`);
+          refreshAdminDashboard();
+        } else {
+          showToast(res.message, 'error');
+        }
+      });
+    });
+
+    // Attach: Manage service access
+    document.querySelectorAll('.admin-manage-services-btn').forEach(b => {
+      b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-userid');
+        const name = b.getAttribute('data-username');
+        openServiceAccessModal(id, name);
+      });
+    });
+
+    // Attach: Toggle status
     document.querySelectorAll('.admin-toggle-status-btn').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-userid');
@@ -1912,22 +2073,103 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // Attach: Delete user
     document.querySelectorAll('.admin-delete-user-btn').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-userid');
-        if (confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
           const res = await AdminDashboard.deleteUser(id);
           if (res.success) {
-            showToast("Utilisateur supprimé.");
+            showToast('Utilisateur supprimé.');
             refreshAdminDashboard();
           } else {
-            showToast(res.message, "error");
+            showToast(res.message, 'error');
           }
         }
       });
     });
 
     if (window.lucide) lucide.createIcons();
+  }
+
+  // =========================================================================
+  // SERVICE ACCESS MODAL LOGIC
+  // =========================================================================
+  const serviceAccessModal = document.getElementById('serviceAccessModal');
+  const closeServiceModalBtn = document.getElementById('closeServiceModalBtn');
+  const cancelServiceModalBtn = document.getElementById('cancelServiceModalBtn');
+  const saveServiceAccessBtn = document.getElementById('saveServiceAccessBtn');
+  const serviceTogglesList = document.getElementById('serviceTogglesList');
+  const serviceModalUserLabel = document.getElementById('serviceModalUserLabel');
+
+  const SERVICE_DEFINITIONS = [
+    { key: 'graphics', label: '🎨 Studio Graphique', desc: 'Icône, Feature Graphic & Screenshots' },
+    { key: 'video', label: '🎥 Vidéo Promo HD', desc: 'Générateur vidéo promotionnelle 1080p' },
+    { key: 'aso', label: '✍️ Textes & ASO', desc: 'Métadonnées trilingues Google Play' },
+    { key: 'privacy', label: '🔒 Confidentialité RGPD', desc: 'Politique de confidentialité légale' },
+    { key: 'checklist', label: '📊 Checklist Testeurs', desc: 'Gestion de 20 testeurs alpha/beta' },
+    { key: 'resizer', label: '📐 Redimensionneur Assets', desc: 'Générateur multi-formats Expo/Android' },
+    { key: 'export', label: '📦 Pack Global .ZIP', desc: 'Export complet de tous les assets' },
+  ];
+
+  let _serviceModalUserId = null;
+  let _serviceModalCurrentAccess = {};
+
+  async function openServiceAccessModal(userId, userLabel) {
+    _serviceModalUserId = userId;
+    if (serviceModalUserLabel) serviceModalUserLabel.textContent = userLabel;
+    const services = await AuthManager.getUserServices(userId);
+    _serviceModalCurrentAccess = { ...services };
+
+    if (serviceTogglesList) {
+      serviceTogglesList.innerHTML = '';
+      SERVICE_DEFINITIONS.forEach(({ key, label, desc }) => {
+        const enabled = !!services[key];
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-4 p-3 rounded-xl bg-gray-800/60 border border-white/5';
+        row.innerHTML = `
+          <div>
+            <p class="font-bold text-xs text-white">${label}</p>
+            <p class="text-[10px] text-gray-400">${desc}</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" data-svckey="${key}" class="sr-only peer" ${enabled ? 'checked' : ''}>
+            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        `;
+        serviceTogglesList.appendChild(row);
+      });
+    }
+
+    if (serviceAccessModal) { serviceAccessModal.classList.remove('hidden'); serviceAccessModal.classList.add('flex'); }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeServiceModal() {
+    if (serviceAccessModal) { serviceAccessModal.classList.add('hidden'); serviceAccessModal.classList.remove('flex'); }
+    _serviceModalUserId = null;
+  }
+
+  if (closeServiceModalBtn) closeServiceModalBtn.addEventListener('click', closeServiceModal);
+  if (cancelServiceModalBtn) cancelServiceModalBtn.addEventListener('click', closeServiceModal);
+
+  if (saveServiceAccessBtn) {
+    saveServiceAccessBtn.addEventListener('click', async () => {
+      if (!_serviceModalUserId) return;
+      const checkboxes = serviceTogglesList?.querySelectorAll('input[type="checkbox"]');
+      const updatedServices = {};
+      checkboxes?.forEach(cb => {
+        updatedServices[cb.getAttribute('data-svckey')] = cb.checked;
+      });
+      const res = await AuthManager.updateUserServices(_serviceModalUserId, updatedServices);
+      if (res.success) {
+        showToast('✅ Accès aux services mis à jour !');
+        closeServiceModal();
+        refreshAdminDashboard();
+      } else {
+        showToast(res.message || 'Erreur lors de la mise à jour.', 'error');
+      }
+    });
   }
 
   if (adminUserSearchInput) {

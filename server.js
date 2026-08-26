@@ -49,8 +49,17 @@ app.post('/api/auth/register', async (req, res) => {
 
     await db.runAsync(`
       INSERT INTO users (id, name, email, password_hash, role, plan, status, projects_count)
-      VALUES (?, ?, ?, ?, ?, ?, 'active', 0)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', 0)
     `, [userId, userName, normalizedEmail, passwordHash, userRole, userPlan]);
+
+    // Admin auto-activé
+    if (userRole === 'admin') {
+      await db.runAsync(`UPDATE users SET status = 'active' WHERE id = ?`, [userId]);
+      const allServices = ['graphics', 'video', 'aso', 'privacy', 'checklist', 'resizer', 'export'];
+      for (const svc of allServices) {
+        await db.runAsync(`INSERT OR IGNORE INTO user_service_access (user_id, service_key, is_enabled) VALUES (?, ?, 1)`, [userId, svc]);
+      }
+    }
 
     // If registered with paid plan, create pending upgrade request
     if (userPlan !== 'Gratuit' && userRole !== 'admin') {
@@ -66,19 +75,9 @@ app.post('/api/auth/register', async (req, res) => {
     await db.runAsync(`
       INSERT INTO activity_logs (type, user_name, description)
       VALUES ('user_register', ?, ?)
-    `, [userName, `Nouvelle inscription (Plan ${userPlan})`]);
+    `, [userName, `Nouvelle inscription (Plan ${userPlan}) - En attente d'approbation`]);
 
-    const user = {
-      id: userId,
-      name: userName,
-      email: normalizedEmail,
-      role: userRole,
-      plan: userPlan,
-      status: 'active',
-      projectsCount: 0
-    };
-
-    res.json({ success: true, user, message: 'Compte créé avec succès.' });
+    res.json({ success: true, message: 'Compte créé avec succès. Votre demande est en cours d\'examen par l\'administrateur.' });
   } catch (err) {
     console.error('Erreur inscription:', err);
     res.status(500).json({ success: false, message: 'Erreur lors de l\'inscription.' });
@@ -119,6 +118,16 @@ app.post('/api/auth/login', async (req, res) => {
       VALUES ('user_login', ?, 'Connexion réussie')
     `, [row.name]);
 
+    // Get service access for this user
+    const serviceRows = await db.allAsync(
+      'SELECT service_key, is_enabled FROM user_service_access WHERE user_id = ?',
+      [row.id]
+    );
+    const services = {};
+    for (const s of serviceRows) {
+      services[s.service_key] = !!s.is_enabled;
+    }
+
     const user = {
       id: row.id,
       name: row.name,
@@ -126,7 +135,8 @@ app.post('/api/auth/login', async (req, res) => {
       role: row.role,
       plan: row.plan,
       status: row.status,
-      projectsCount: row.projects_count
+      projectsCount: row.projects_count,
+      services
     };
 
     res.json({ success: true, user, message: 'Connexion réussie.' });
@@ -271,6 +281,86 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) {
     console.error('Erreur users:', err);
     res.status(500).json({ success: false, users: [] });
+  }
+});
+
+/**
+ * Approve User (pending → active)
+ */
+app.post('/api/admin/users/:id/approve', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await db.getAsync('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
+
+    await db.runAsync('UPDATE users SET status = ? WHERE id = ?', ['active', userId]);
+
+    await db.runAsync(`
+      INSERT INTO activity_logs (type, user_name, description)
+      VALUES ('user_approved', 'Admin', ?)
+    `, [`Approbation du compte ${user.email}`]);
+
+    res.json({ success: true, message: 'Utilisateur approuvé.' });
+  } catch (err) {
+    console.error('Erreur approbation user:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+/**
+ * Get Service Access for a User
+ */
+app.get('/api/admin/users/:id/services', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const allServices = ['graphics', 'video', 'aso', 'privacy', 'checklist', 'resizer', 'export'];
+    const rows = await db.allAsync(
+      'SELECT service_key, is_enabled FROM user_service_access WHERE user_id = ?',
+      [userId]
+    );
+    const accessMap = {};
+    for (const s of allServices) {
+      const row = rows.find(r => r.service_key === s);
+      accessMap[s] = row ? !!row.is_enabled : false;
+    }
+    res.json({ success: true, services: accessMap });
+  } catch (err) {
+    console.error('Erreur get services:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+/**
+ * Update Service Access for a User
+ */
+app.post('/api/admin/users/:id/services', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { services } = req.body; // { graphics: true, video: false, ... }
+    if (!services || typeof services !== 'object') {
+      return res.status(400).json({ success: false, message: 'Données de services invalides.' });
+    }
+
+    const user = await db.getAsync('SELECT name, email FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
+
+    for (const [key, enabled] of Object.entries(services)) {
+      await db.runAsync(`
+        INSERT INTO user_service_access (user_id, service_key, is_enabled)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id, service_key) DO UPDATE SET is_enabled = excluded.is_enabled
+      `, [userId, key, enabled ? 1 : 0]);
+    }
+
+    await db.runAsync(`
+      INSERT INTO activity_logs (type, user_name, description)
+      VALUES ('service_update', 'Admin', ?)
+    `, [`Mise à jour des accès services pour ${user.email}`]);
+
+    res.json({ success: true, message: 'Accès aux services mis à jour.' });
+  } catch (err) {
+    console.error('Erreur update services:', err);
+    res.status(500).json({ success: false });
   }
 });
 

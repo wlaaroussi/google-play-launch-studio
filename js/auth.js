@@ -35,6 +35,36 @@ class AuthManager {
   }
 
   /**
+   * Check if user is logged in AND approved (status = 'active')
+   */
+  static isApproved() {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    return user.status === 'active';
+  }
+
+  /**
+   * Check if user is logged in but pending approval
+   */
+  static isPending() {
+    const user = this.getCurrentUser();
+    return !!(user && user.status === 'pending');
+  }
+
+  /**
+   * Check if user has access to a specific service
+   * Service keys: 'graphics', 'video', 'aso', 'privacy', 'checklist', 'resizer', 'export'
+   */
+  static canAccessService(serviceKey) {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    if (user.role === 'admin') return true; // Admin can access everything
+    if (user.status !== 'active') return false;
+    if (!user.services) return false;
+    return !!user.services[serviceKey];
+  }
+
+  /**
    * Check if user has permission to download assets (Admin or Premium PRO/VIP)
    */
   static canDownload() {
@@ -47,6 +77,7 @@ class AuthManager {
 
   /**
    * Register a new user with selected plan via SQLite Backend API
+   * NOTE: Users are created with status='pending' - they need admin approval.
    */
   static async register(name, email, password, chosenPlan = 'Gratuit') {
     try {
@@ -56,25 +87,15 @@ class AuthManager {
         body: JSON.stringify({ name, email, password, plan: chosenPlan })
       });
       const data = await res.json();
-      if (data.success && data.user) {
-        this.setCurrentUser(data.user);
-        return { success: true, user: data.user, message: data.message };
+      if (data.success) {
+        // Do NOT auto-login pending users; just return success message
+        return { success: true, pending: true, message: data.message };
       } else {
         return { success: false, message: data.message || "Erreur lors de l'inscription." };
       }
     } catch (err) {
       console.warn("Backend offline, fallback local registration", err);
-      // Fallback local
-      const newUser = {
-        id: 'usr_' + Date.now().toString(36),
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        role: email.trim().toLowerCase() === 'admin@launchstudio.com' ? 'admin' : 'user',
-        plan: chosenPlan,
-        status: 'active'
-      };
-      this.setCurrentUser(newUser);
-      return { success: true, user: newUser };
+      return { success: false, message: "Impossible de contacter le serveur. Vérifiez votre connexion." };
     }
   }
 
@@ -98,7 +119,15 @@ class AuthManager {
     } catch (err) {
       console.warn("Backend offline, fallback local login", err);
       if (email === 'admin@launchstudio.com' && password === 'admin') {
-        const adminUser = { id: 'usr_admin_001', name: 'Super Admin', email, role: 'admin', plan: 'Enterprise', status: 'active' };
+        const adminUser = {
+          id: 'usr_admin_001',
+          name: 'Super Admin',
+          email,
+          role: 'admin',
+          plan: 'Enterprise',
+          status: 'active',
+          services: { graphics: true, video: true, aso: true, privacy: true, checklist: true, resizer: true, export: true }
+        };
         this.setCurrentUser(adminUser);
         return { success: true, user: adminUser };
       }
@@ -133,6 +162,10 @@ class AuthManager {
     }
   }
 
+  // =========================================================================
+  // ADMIN API METHODS
+  // =========================================================================
+
   /**
    * Fetch All Users (for Admin)
    */
@@ -143,6 +176,71 @@ class AuthManager {
       return data.success ? data.users : [];
     } catch (e) {
       return [];
+    }
+  }
+
+  /**
+   * Approve a pending user account
+   */
+  static async approveUser(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/approve`, { method: 'POST' });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
+    }
+  }
+
+  /**
+   * Get service access map for a user
+   */
+  static async getUserServices(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/services`);
+      const data = await res.json();
+      return data.success ? data.services : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /**
+   * Update service access for a user
+   */
+  static async updateUserServices(userId, services) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/services`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ services })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
+    }
+  }
+
+  /**
+   * Toggle user status (active <-> suspended)
+   */
+  static async toggleUserStatus(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/status`, { method: 'POST' });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
+    }
+  }
+
+  /**
+   * Delete user account
+   */
+  static async deleteUser(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
     }
   }
 

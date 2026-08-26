@@ -2258,6 +2258,7 @@
         <button data-admintab="users" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
           <i data-lucide="users" class="w-4 h-4"></i>
           <span>Gestion des Utilisateurs</span>
+          <span id="adminPendingUsersBadge" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500 text-white font-extrabold text-[10px]">0</span>
         </button>
         <button data-admintab="pricing" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
           <i data-lucide="tag" class="w-4 h-4"></i>
@@ -2309,6 +2310,18 @@
 
       <!-- ADMIN SUBTAB 1: USERS MANAGEMENT -->
       <div id="admintab-users" class="admin-sub-pane hidden space-y-4">
+        <!-- Pending Users Section -->
+        <div id="adminPendingUsersPanel" class="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-950/10 space-y-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-clock" class="w-4 h-4 text-rose-400"></i>
+            <h4 class="font-bold text-sm text-white">Comptes en Attente d'Approbation</h4>
+            <span id="pendingUsersCount" class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-[10px]">0</span>
+          </div>
+          <div id="pendingUsersContainer" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
         <div class="glass-panel p-6 rounded-2xl space-y-4">
           
           <div class="flex flex-wrap items-center justify-between gap-4">
@@ -2777,6 +2790,86 @@
       </div>
     </div>
   </footer>
+
+  <!-- ========================================================================= -->
+  <!-- PENDING ACCOUNT WAITING SCREEN (shown when status='pending') -->
+  <!-- ========================================================================= -->
+  <div id="pendingAccountOverlay" class="fixed inset-0 z-[200] bg-[#0B0F19]/98 backdrop-blur-xl hidden flex-col items-center justify-center text-center px-6">
+    <div class="max-w-md w-full space-y-8 animate-fade-in">
+      <!-- Animated clock icon -->
+      <div class="relative mx-auto w-24 h-24">
+        <div class="absolute inset-0 rounded-full bg-amber-500/20 animate-ping"></div>
+        <div class="relative w-24 h-24 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 border-2 border-amber-500/50 flex items-center justify-center">
+          <i data-lucide="clock" class="w-10 h-10 text-amber-400"></i>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="text-2xl font-extrabold text-white font-['Outfit']">Compte en Attente d'Approbation</h2>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Bienvenue <span id="pendingUserName" class="font-bold text-amber-300"></span> ! Votre compte a bien été créé.<br>
+          L'administrateur examinera votre demande et activera votre accès très prochainement.
+        </p>
+      </div>
+
+      <div class="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-950/20 space-y-3 text-left">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <p class="text-xs text-gray-300">Votre email a bien été enregistré dans notre système</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+            <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <p class="text-xs text-gray-300">En attente de validation manuelle par l'administrateur</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+            <i data-lucide="zap" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <p class="text-xs text-gray-300">Vous recevrez l'accès aux services activés par l'admin</p>
+        </div>
+      </div>
+
+      <button id="pendingLogoutBtn" class="w-full px-6 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 font-bold text-sm flex items-center justify-center gap-2 transition">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+        Se déconnecter
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SERVICE ACCESS MODAL (Admin: Manage per-user service toggles) -->
+  <!-- ========================================================================= -->
+  <div id="serviceAccessModal" class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#111827] border border-amber-500/30 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-extrabold text-base text-white font-['Outfit']">Gérer les Accès Services</h3>
+          <p id="serviceModalUserLabel" class="text-xs text-amber-400 mt-0.5"></p>
+        </div>
+        <button id="closeServiceModalBtn" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2" id="serviceTogglesList">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button id="saveServiceAccessBtn" class="flex-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-extrabold text-xs shadow-lg hover:scale-[1.02] transition">
+          <i data-lucide="save" class="w-4 h-4 inline mr-1"></i>
+          Enregistrer les Accès
+        </button>
+        <button id="cancelServiceModalBtn" class="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 font-bold text-xs transition">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script src="js/pricing-manager.js?v=3"></script>
