@@ -1410,8 +1410,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const userEmailLabel = document.getElementById('userEmailLabel');
   const logoutHeaderBtn = document.getElementById('logoutHeaderBtn');
   const adminNavTabBtn = document.getElementById('adminNavTabBtn');
-  const quickLoginAdminBtn = document.getElementById('quickLoginAdminBtn');
-  const quickLoginUserBtn = document.getElementById('quickLoginUserBtn');
 
   let authMode = 'login'; // 'login' or 'register'
 
