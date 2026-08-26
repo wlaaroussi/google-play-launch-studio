@@ -1545,29 +1545,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Quick Test Logins
-  if (quickLoginAdminBtn) {
-    quickLoginAdminBtn.addEventListener('click', async () => {
-      const res = await AuthManager.login('admin@launchstudio.com', 'admin');
-      if (res.success) {
-        showToast("👑 Connecté en tant que Super Admin !");
-        authModal.classList.add('hidden');
-        updateAuthUI();
-      }
-    });
-  }
-
-  if (quickLoginUserBtn) {
-    quickLoginUserBtn.addEventListener('click', async () => {
-      const res = await AuthManager.login('youssef@example.com', 'user123');
-      if (res.success) {
-        showToast("📱 Connecté en tant que Développeur PRO (5$) !");
-        authModal.classList.add('hidden');
-        updateAuthUI();
-      }
-    });
-  }
-
   if (logoutHeaderBtn) {
     logoutHeaderBtn.addEventListener('click', () => {
       AuthManager.logout();
