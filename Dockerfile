@@ -1,20 +1,26 @@
 # ==========================================================================
-# Google Play Launch Studio - Dockerfile (Ultra-Lightweight & Fast Nginx Alpine)
+# Google Play Launch Studio - Dockerfile (Node.js + SQLite Backend)
 # ==========================================================================
 
-FROM nginx:alpine
+FROM node:20-slim
 
-# Default PORT environment variable for local & cloud platforms
-ENV PORT=80
+WORKDIR /app
 
-# Copy Nginx configuration template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy package descriptors
+COPY package*.json ./
 
-# Copy all static website files to Nginx web root
-COPY . /usr/share/nginx/html
+# Install production dependencies
+RUN npm install --omit=dev
 
-# Expose default HTTP port
-EXPOSE 80
+# Copy application source code
+COPY . .
 
-# Substitute $PORT dynamically and start Nginx in foreground
-CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+# Ensure data directory exists for SQLite database persistence
+RUN mkdir -p data
+
+# Default environment port
+ENV PORT=3000
+EXPOSE 3000
+
+# Start Node.js server
+CMD ["node", "server.js"]

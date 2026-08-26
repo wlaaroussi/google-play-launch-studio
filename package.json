@@ -1,0 +1,26 @@
+{
+  "name": "google-play-launch-studio",
+  "version": "2.0.0",
+  "description": "Google Play Launch Studio - Suite tout-en-un d'assets, vidéos et ASO avec base SQLite",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  },
+  "keywords": [
+    "google-play",
+    "aso",
+    "assets",
+    "generator",
+    "sqlite"
+  ],
+  "author": "wlaaroussi",
+  "license": "MIT"
+}

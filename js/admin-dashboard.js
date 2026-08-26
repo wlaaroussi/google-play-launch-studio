@@ -1,166 +1,188 @@
 /**
  * Google Play Launch Studio - Admin Dashboard & Feature Roadmap Controller
- * Provides KPIs, User Management, Premium Upgrades Approvals, Pricing Editor, and System Settings
+ * Provides KPIs, User Management, Premium Upgrades Approvals, Pricing Editor, and System Settings via SQLite API
  */
 
 class AdminDashboard {
-  static STORAGE_SETTINGS_KEY = 'launch_studio_site_settings';
-  static STORAGE_FEATURE_FLAGS_KEY = 'launch_studio_feature_flags';
-
-  static getFeatureFlags() {
-    const defaults = {
-      aiAsoGenerator: true,
-      iosAppStoreSupport: false,
-      ultraHd4kVideo: true,
-      googlePlayApiSync: false,
-      stripePayments: true,
-      maintenanceMode: false
-    };
+  /**
+   * Get Feature Flags from SQLite API
+   */
+  static async getFeatureFlags() {
     try {
-      return Object.assign(defaults, JSON.parse(localStorage.getItem(this.STORAGE_FEATURE_FLAGS_KEY) || '{}'));
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      return data.flags || {
+        aiAsoGenerator: true,
+        iosAppStoreSupport: false,
+        ultraHd4kVideo: true,
+        googlePlayApiSync: false,
+        stripePayments: true,
+        maintenanceMode: false
+      };
     } catch (e) {
-      return defaults;
+      return {
+        aiAsoGenerator: true,
+        iosAppStoreSupport: false,
+        ultraHd4kVideo: true,
+        googlePlayApiSync: false,
+        stripePayments: true,
+        maintenanceMode: false
+      };
     }
-  }
-
-  static saveFeatureFlags(flags) {
-    localStorage.setItem(this.STORAGE_FEATURE_FLAGS_KEY, JSON.stringify(flags));
-  }
-
-  static getSiteSettings() {
-    const defaults = {
-      siteName: "Google Play Launch Studio",
-      announcementMessage: "✨ Bienvenue sur Launch Studio ! Accès Démo actif. Contactez l'admin pour activer vos téléchargements illimités.",
-      showAnnouncement: true,
-      supportEmail: "support@launchstudio.com"
-    };
-    try {
-      return Object.assign(defaults, JSON.parse(localStorage.getItem(this.STORAGE_SETTINGS_KEY) || '{}'));
-    } catch (e) {
-      return defaults;
-    }
-  }
-
-  static saveSiteSettings(settings) {
-    localStorage.setItem(this.STORAGE_SETTINGS_KEY, JSON.stringify(settings));
   }
 
   /**
-   * Calculate summary metrics from users, upgrades & activities
+   * Save Feature Flags to SQLite API
    */
-  static getMetrics() {
-    const users = AuthManager.getUsers();
-    const logs = AuthManager.getActivityLogs();
-    const upgrades = AuthManager.getPendingUpgrades().filter(u => u.status === 'pending');
+  static async saveFeatureFlags(flags) {
+    try {
+      const res = await fetch('/api/admin/features', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flags })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false };
+    }
+  }
 
-    const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.status === 'active').length;
-    const proUsers = users.filter(u => u.plan === 'PRO' || u.plan === 'VIP' || u.plan === 'Enterprise').length;
-    const totalExports = logs.filter(l => l.type === 'export_zip' || l.type === 'video_render').length + 42;
-    const pendingUpgradesCount = upgrades.length;
+  /**
+   * Get Site Settings from SQLite API
+   */
+  static async getSiteSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      return data.settings || {
+        siteName: "Google Play Launch Studio",
+        announcementMessage: "✨ Bienvenue sur Launch Studio ! Accès Démo actif. Contactez l'admin pour activer vos téléchargements illimités.",
+        showAnnouncement: true,
+        supportEmail: "support@launchstudio.com"
+      };
+    } catch (e) {
+      return {
+        siteName: "Google Play Launch Studio",
+        announcementMessage: "✨ Bienvenue sur Launch Studio ! Accès Démo actif. Contactez l'admin pour activer vos téléchargements illimités.",
+        showAnnouncement: true,
+        supportEmail: "support@launchstudio.com"
+      };
+    }
+  }
 
-    return {
-      totalUsers,
-      activeUsers,
-      proUsers,
-      totalExports,
-      pendingUpgradesCount
-    };
+  /**
+   * Save Site Settings to SQLite API
+   */
+  static async saveSiteSettings(settings) {
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false };
+    }
+  }
+
+  /**
+   * Get summary metrics from SQLite API
+   */
+  static async getMetrics() {
+    try {
+      const res = await fetch('/api/admin/metrics');
+      const data = await res.json();
+      return data.metrics || {
+        totalUsers: 0,
+        activeUsers: 0,
+        proUsers: 0,
+        totalExports: 42,
+        pendingUpgradesCount: 0
+      };
+    } catch (e) {
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        proUsers: 0,
+        totalExports: 42,
+        pendingUpgradesCount: 0
+      };
+    }
   }
 
   /**
    * Delete user by ID
    */
-  static deleteUser(userId) {
-    const current = AuthManager.getCurrentUser();
-    if (current && current.id === userId) {
-      return { success: false, message: "Vous ne pouvez pas supprimer votre propre compte administrateur." };
+  static async deleteUser(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
     }
-
-    let users = AuthManager.getUsers();
-    users = users.filter(u => u.id !== userId);
-    AuthManager.saveUsers(users);
-    AuthManager.logActivity('user_delete', current?.name, `Suppression de l'utilisateur (${userId})`);
-    return { success: true };
   }
 
   /**
    * Toggle user status (active <-> suspended)
    */
-  static toggleUserStatus(userId) {
-    const users = AuthManager.getUsers();
-    const user = users.find(u => u.id === userId);
-    if (!user) return { success: false, message: "Utilisateur non trouvé." };
-
-    user.status = user.status === 'active' ? 'suspended' : 'active';
-    AuthManager.saveUsers(users);
-    AuthManager.logActivity('user_status', AuthManager.getCurrentUser()?.name, `Changement de statut pour ${user.email} (${user.status})`);
-    return { success: true, status: user.status };
-  }
-
-  /**
-   * Update user role (user <-> admin)
-   */
-  static toggleUserRole(userId) {
-    const users = AuthManager.getUsers();
-    const user = users.find(u => u.id === userId);
-    if (!user) return { success: false, message: "Utilisateur non trouvé." };
-
-    user.role = user.role === 'admin' ? 'user' : 'admin';
-    AuthManager.saveUsers(users);
-    AuthManager.logActivity('user_role', AuthManager.getCurrentUser()?.name, `Changement de rôle pour ${user.email} -> ${user.role}`);
-    return { success: true, role: user.role };
+  static async toggleUserStatus(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/status`, { method: 'POST' });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
+    }
   }
 
   /**
    * Add a new user from Admin Panel
    */
-  static addUser(name, email, password, role = 'user', plan = 'Gratuit') {
-    const users = AuthManager.getUsers();
-    const cleanEmail = email.trim().toLowerCase();
-
-    if (users.find(u => u.email.toLowerCase() === cleanEmail)) {
-      return { success: false, message: "Cet email est déjà utilisé." };
+  static async addUser(name, email, password, role = 'user', plan = 'Gratuit') {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, plan })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur serveur" };
     }
-
-    const newUser = {
-      id: 'usr_' + Date.now().toString(36),
-      name: name.trim(),
-      email: cleanEmail,
-      password: password,
-      role: role,
-      plan: plan,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      projectsCount: 0,
-      lastLogin: '-'
-    };
-
-    users.push(newUser);
-    AuthManager.saveUsers(users);
-    AuthManager.logActivity('admin_add_user', AuthManager.getCurrentUser()?.name, `Création manuelle de l'utilisateur ${cleanEmail} (Plan: ${plan})`);
-    return { success: true, user: newUser };
   }
 
   /**
-   * Export Entire Database as JSON File
+   * Export Entire SQLite Database as JSON Backup File
    */
-  static exportDatabaseJson() {
-    const dbDump = {
-      exportDate: new Date().toISOString(),
-      users: AuthManager.getUsers(),
-      upgradeRequests: AuthManager.getPendingUpgrades(),
-      pricingPlans: PricingManager.getPlans(),
-      activities: AuthManager.getActivityLogs(),
-      featureFlags: this.getFeatureFlags(),
-      siteSettings: this.getSiteSettings()
-    };
+  static async exportDatabaseJson() {
+    try {
+      const [users, upgrades, pricing, logs, settingsRes] = await Promise.all([
+        AuthManager.getUsers(),
+        AuthManager.getPendingUpgrades(),
+        PricingManager.getPlans(),
+        AuthManager.getActivityLogs(),
+        fetch('/api/settings').then(r => r.json()).catch(() => ({}))
+      ]);
 
-    const blob = new Blob([JSON.stringify(dbDump, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `launch_studio_backup_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+      const dbDump = {
+        exportDate: new Date().toISOString(),
+        engine: 'SQLite3',
+        users,
+        upgradeRequests: upgrades,
+        pricingPlans: pricing,
+        activities: logs,
+        featureFlags: settingsRes.flags || {},
+        siteSettings: settingsRes.settings || {}
+      };
+
+      const blob = new Blob([JSON.stringify(dbDump, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `launch_studio_sqlite_backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+    } catch (err) {
+      console.error("Export error", err);
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 .git
 .gitignore
-*.md
-.dockerignore
-Dockerfile
-docker-compose.yml
+node_modules
+*.log
+.DS_Store
+Thumbs.db

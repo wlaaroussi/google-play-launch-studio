@@ -1452,7 +1452,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authSwitchRegisterBtn) authSwitchRegisterBtn.addEventListener('click', () => setAuthMode('register'));
 
   if (authForm) {
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = authInputEmail.value;
       const password = authInputPassword.value;
@@ -1460,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (authMode === 'register') {
         const name = authInputName.value || email.split('@')[0];
         const plan = document.getElementById('authInputPlan')?.value || 'Gratuit';
-        const res = AuthManager.register(name, email, password, plan);
+        const res = await AuthManager.register(name, email, password, plan);
         if (res.success) {
           showToast(`🎉 Bienvenue ${res.user.name} ! Compte créé avec succès.`);
           authModal.classList.add('hidden');
@@ -1471,7 +1471,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(res.message, "error");
         }
       } else {
-        const res = AuthManager.login(email, password);
+        const res = await AuthManager.login(email, password);
         if (res.success) {
           showToast(`👋 Heureux de vous revoir, ${res.user.name} !`);
           authModal.classList.add('hidden');
@@ -1485,8 +1485,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Quick Test Logins
   if (quickLoginAdminBtn) {
-    quickLoginAdminBtn.addEventListener('click', () => {
-      const res = AuthManager.login('admin@launchstudio.com', 'admin');
+    quickLoginAdminBtn.addEventListener('click', async () => {
+      const res = await AuthManager.login('admin@launchstudio.com', 'admin');
       if (res.success) {
         showToast("👑 Connecté en tant que Super Admin !");
         authModal.classList.add('hidden');
@@ -1496,8 +1496,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (quickLoginUserBtn) {
-    quickLoginUserBtn.addEventListener('click', () => {
-      const res = AuthManager.login('youssef@example.com', 'user123');
+    quickLoginUserBtn.addEventListener('click', async () => {
+      const res = await AuthManager.login('youssef@example.com', 'user123');
       if (res.success) {
         showToast("📱 Connecté en tant que Développeur PRO (5$) !");
         authModal.classList.add('hidden');
@@ -1736,30 +1736,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  function refreshAdminDashboard() {
+  async function refreshAdminDashboard() {
     if (!window.AdminDashboard) return;
 
     // 1. KPIs
-    const metrics = AdminDashboard.getMetrics();
-    document.getElementById('kpiTotalUsers').innerText = metrics.totalUsers;
-    document.getElementById('kpiActiveUsers').innerText = metrics.activeUsers;
-    document.getElementById('kpiProUsers').innerText = metrics.proUsers;
-    document.getElementById('kpiTotalExports').innerText = metrics.totalExports;
+    const metrics = await AdminDashboard.getMetrics();
+    const kpiTotal = document.getElementById('kpiTotalUsers');
+    const kpiActive = document.getElementById('kpiActiveUsers');
+    const kpiPro = document.getElementById('kpiProUsers');
+    const kpiExports = document.getElementById('kpiTotalExports');
+    if (kpiTotal) kpiTotal.innerText = metrics.totalUsers;
+    if (kpiActive) kpiActive.innerText = metrics.activeUsers;
+    if (kpiPro) kpiPro.innerText = metrics.proUsers;
+    if (kpiExports) kpiExports.innerText = metrics.totalExports;
     if (adminPendingBadge) adminPendingBadge.innerText = metrics.pendingUpgradesCount;
     const sidebarAdminBadge = document.getElementById('sidebarAdminBadge');
     if (sidebarAdminBadge) sidebarAdminBadge.innerText = metrics.pendingUpgradesCount;
 
     // 2. Pending Upgrades Table
-    renderAdminUpgradesTable();
+    await renderAdminUpgradesTable();
 
     // 3. Users Table
-    renderAdminUsersTable();
+    await renderAdminUsersTable();
 
     // 4. Load Pricing into Editor
     loadPricingEditorData();
 
     // 5. Feature Flags
-    const flags = AdminDashboard.getFeatureFlags();
+    const flags = await AdminDashboard.getFeatureFlags();
     if (flagAiAso) flagAiAso.checked = !!flags.aiAsoGenerator;
     if (flagIosSupport) flagIosSupport.checked = !!flags.iosAppStoreSupport;
     if (flagUltraHdVideo) flagUltraHdVideo.checked = !!flags.ultraHd4kVideo;
@@ -1768,20 +1772,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (flagMaintenanceMode) flagMaintenanceMode.checked = !!flags.maintenanceMode;
 
     // 6. Site Settings
-    const settings = AdminDashboard.getSiteSettings();
+    const settings = await AdminDashboard.getSiteSettings();
     if (adminAnnouncementInput) adminAnnouncementInput.value = settings.announcementMessage;
     if (adminShowAnnouncementCheck) adminShowAnnouncementCheck.checked = !!settings.showAnnouncement;
     if (siteAnnouncementBanner) siteAnnouncementBanner.classList.toggle('hidden', !settings.showAnnouncement);
     if (siteAnnouncementText) siteAnnouncementText.innerText = settings.announcementMessage;
 
     // 7. Activity Logs
-    renderAdminActivityLogs();
+    await renderAdminActivityLogs();
   }
 
-  function renderAdminUpgradesTable() {
+  async function renderAdminUpgradesTable() {
     if (!adminUpgradesTableBody) return;
     adminUpgradesTableBody.innerHTML = '';
-    const upgrades = AuthManager.getPendingUpgrades().filter(u => u.status === 'pending');
+    const allUpgrades = await AuthManager.getPendingUpgrades();
+    const upgrades = allUpgrades.filter(u => u.status === 'pending');
 
     if (upgrades.length === 0) {
       adminUpgradesTableBody.innerHTML = `
@@ -1824,11 +1829,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.admin-approve-upgrade-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-upgid');
-        const res = AuthManager.approveUpgrade(id);
+        const res = await AuthManager.approveUpgrade(id);
         if (res.success) {
-          showToast(`✅ Accès Premium activé pour ${res.user.email} !`);
+          showToast(`✅ Accès Premium activé !`);
           refreshAdminDashboard();
         }
       });
@@ -1837,14 +1842,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) lucide.createIcons();
   }
 
-  function renderAdminUsersTable(filter = '') {
+  async function renderAdminUsersTable(filter = '') {
     if (!adminUsersTableBody) return;
     adminUsersTableBody.innerHTML = '';
 
-    const users = AuthManager.getUsers();
+    const users = await AuthManager.getUsers();
     const query = filter.trim().toLowerCase();
     const filteredUsers = query 
-      ? users.filter(u => u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query))
+      ? users.filter(u => (u.name || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query))
       : users;
 
     filteredUsers.forEach(u => {
@@ -1864,16 +1869,13 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-gray-800 text-gray-300'}">
-            ${u.role.toUpperCase()}
+            ${(u.role || 'user').toUpperCase()}
           </span>
         </td>
         <td class="py-3 px-3">
-          <select data-userid="${u.id}" class="admin-user-plan-select glass-input rounded-lg px-2 py-1 text-[11px] font-bold ${u.plan === 'PRO' || u.plan === 'VIP' || u.plan === 'Enterprise' ? 'text-amber-300' : 'text-gray-400'}">
-            <option value="Gratuit" ${u.plan === 'Gratuit' ? 'selected' : ''}>Gratuit (Démo)</option>
-            <option value="PRO" ${u.plan === 'PRO' ? 'selected' : ''}>PRO (5$/m)</option>
-            <option value="VIP" ${u.plan === 'VIP' ? 'selected' : ''}>VIP (8$/m)</option>
-            <option value="Enterprise" ${u.plan === 'Enterprise' ? 'selected' : ''}>Enterprise</option>
-          </select>
+          <span class="px-2 py-1 text-[11px] font-bold ${u.plan === 'PRO' || u.plan === 'VIP' || u.plan === 'Enterprise' ? 'text-amber-300' : 'text-gray-400'}">
+            ${u.plan || 'Gratuit'}
+          </span>
         </td>
         <td class="py-3 px-3">
           <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
@@ -1886,9 +1888,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3 text-right">
           <div class="flex items-center justify-end gap-1.5">
-            <button data-userid="${u.id}" class="admin-toggle-role-btn p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-amber-300 transition" title="Changer de Rôle (Admin/User)">
-              <i data-lucide="shield" class="w-3.5 h-3.5"></i>
-            </button>
             <button data-userid="${u.id}" class="admin-toggle-status-btn p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 ${u.status === 'active' ? 'text-rose-400' : 'text-emerald-400'} transition" title="${u.status === 'active' ? 'Suspendre' : 'Réactiver'}">
               <i data-lucide="${u.status === 'active' ? 'ban' : 'check'}" class="w-3.5 h-3.5"></i>
             </button>
@@ -1901,33 +1900,11 @@ document.addEventListener('DOMContentLoaded', () => {
       adminUsersTableBody.appendChild(tr);
     });
 
-    // Plan selector direct change
-    document.querySelectorAll('.admin-user-plan-select').forEach(select => {
-      select.addEventListener('change', (e) => {
-        const id = select.getAttribute('data-userid');
-        const plan = e.target.value;
-        AuthManager.setUserPlan(id, plan);
-        showToast(`Plan mis à jour : ${plan}`);
-        refreshAdminDashboard();
-      });
-    });
-
     // Attach listeners
-    document.querySelectorAll('.admin-toggle-role-btn').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-userid');
-        const res = AdminDashboard.toggleUserRole(id);
-        if (res.success) {
-          showToast("Rôle mis à jour !");
-          refreshAdminDashboard();
-        }
-      });
-    });
-
     document.querySelectorAll('.admin-toggle-status-btn').forEach(b => {
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         const id = b.getAttribute('data-userid');
-        const res = AdminDashboard.toggleUserStatus(id);
+        const res = await AdminDashboard.toggleUserStatus(id);
         if (res.success) {
           showToast(`Statut utilisateur : ${res.status}`);
           refreshAdminDashboard();
@@ -1936,10 +1913,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.admin-delete-user-btn').forEach(b => {
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         const id = b.getAttribute('data-userid');
         if (confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-          const res = AdminDashboard.deleteUser(id);
+          const res = await AdminDashboard.deleteUser(id);
           if (res.success) {
             showToast("Utilisateur supprimé.");
             refreshAdminDashboard();
@@ -1974,7 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (adminSavePricingBtn) {
-    adminSavePricingBtn.addEventListener('click', () => {
+    adminSavePricingBtn.addEventListener('click', async () => {
       const proFeats = editProFeatures.value.split('\n').map(s => s.trim()).filter(Boolean);
       const vipFeats = editVipFeatures.value.split('\n').map(s => s.trim()).filter(Boolean);
 
@@ -1988,7 +1965,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save Feature Flags
   if (adminSaveFeatureFlagsBtn) {
-    adminSaveFeatureFlagsBtn.addEventListener('click', () => {
+    adminSaveFeatureFlagsBtn.addEventListener('click', async () => {
       const flags = {
         aiAsoGenerator: flagAiAso.checked,
         iosAppStoreSupport: flagIosSupport.checked,
@@ -1997,21 +1974,21 @@ document.addEventListener('DOMContentLoaded', () => {
         stripePayments: flagStripePayments.checked,
         maintenanceMode: flagMaintenanceMode.checked
       };
-      AdminDashboard.saveFeatureFlags(flags);
+      await AdminDashboard.saveFeatureFlags(flags);
       showToast("🚀 Préférences des fonctionnalités enregistrées !");
     });
   }
 
   // Save Site Settings
   if (adminSaveSettingsBtn) {
-    adminSaveSettingsBtn.addEventListener('click', () => {
+    adminSaveSettingsBtn.addEventListener('click', async () => {
       const settings = {
         siteName: "Google Play Launch Studio",
         announcementMessage: adminAnnouncementInput.value,
         showAnnouncement: adminShowAnnouncementCheck.checked,
         supportEmail: "support@launchstudio.com"
       };
-      AdminDashboard.saveSiteSettings(settings);
+      await AdminDashboard.saveSiteSettings(settings);
       if (siteAnnouncementBanner) siteAnnouncementBanner.classList.toggle('hidden', !settings.showAnnouncement);
       if (siteAnnouncementText) siteAnnouncementText.innerText = settings.announcementMessage;
       showToast("📢 Paramètres et bannière mis à jour !");
@@ -2019,10 +1996,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Activity Logs
-  function renderAdminActivityLogs() {
+  async function renderAdminActivityLogs() {
     if (!adminActivityLogsList) return;
     adminActivityLogsList.innerHTML = '';
-    const logs = AuthManager.getActivityLogs();
+    const logs = await AuthManager.getActivityLogs();
 
     logs.slice(0, 30).forEach(log => {
       const item = document.createElement('div');
