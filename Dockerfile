@@ -4,14 +4,17 @@
 
 FROM nginx:alpine
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Default PORT environment variable for local & cloud platforms
+ENV PORT=80
+
+# Copy Nginx configuration template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Copy all static website files to Nginx web root
 COPY . /usr/share/nginx/html
 
-# Expose HTTP port
+# Expose default HTTP port
 EXPOSE 80
 
-# Start Nginx in foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Substitute $PORT dynamically and start Nginx in foreground
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
