@@ -2885,6 +2885,136 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // =========================================================================
+  // PROJECT RESET / NEW APPLICATION SESSION CONTROLLER
+  // =========================================================================
+  const headerResetProjectBtn = document.getElementById('headerResetProjectBtn');
+  const resetProjectModal = document.getElementById('resetProjectModal');
+  const closeResetModalBtn = document.getElementById('closeResetModalBtn');
+  const cancelResetModalBtn = document.getElementById('cancelResetModalBtn');
+  const confirmResetProjectBtn = document.getElementById('confirmResetProjectBtn');
+
+  if (headerResetProjectBtn) {
+    headerResetProjectBtn.addEventListener('click', () => {
+      if (resetProjectModal) resetProjectModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeResetModalBtn) closeResetModalBtn.addEventListener('click', () => resetProjectModal.classList.add('hidden'));
+  if (cancelResetModalBtn) cancelResetModalBtn.addEventListener('click', () => resetProjectModal.classList.add('hidden'));
+
+  function resetAppProject() {
+    // 1. Reset Icon Config
+    AppState.iconConfig = {
+      bg: { type: 'gradient', color1: '#00F0FF', color2: '#3B82F6', angle: 135 },
+      fgType: 'icon',
+      emoji: '⚡',
+      text: 'G',
+      iconKey: 'bolt',
+      imageElement: null,
+      iconColor: '#FFFFFF',
+      iconScale: 1.0,
+      fontFamily: 'Outfit',
+      borderRadius: 115,
+      borderWidth: 0,
+      borderColor: '#FFFFFF',
+      shadow: true,
+      glow: false
+    };
+
+    // 2. Reset Feature Graphic Config
+    AppState.featureConfig = {
+      bg: { preset: 'dark_navy', color1: '#0F172A', color2: '#1E1B4B', type: 'gradient' },
+      title: "Votre Application Révolutionnaire",
+      subtitle: "Gagnez du temps et boostez vos résultats dès aujourd'hui",
+      badgeText: "⭐ NOUVELLE VERSION",
+      fontFamily: "Outfit",
+      textColor: "#FFFFFF",
+      badgeColor: "#00F0FF",
+      isRTL: false,
+      mockupMode: 'single_tilted',
+      screenshotImg: null
+    };
+
+    // 3. Reset Screenshots List
+    AppState.activeScreenIndex = 0;
+    AppState.screenshotsList = [
+      { headline: "Tableau de Bord Intelligent", subtitle: "Visualisez toutes vos données en un coup d'œil", badgeText: "NOUVEAU", layoutStyle: "tilt_left", bg: { preset: 'dark_navy' }, fontFamily: "Outfit", textColor: "#FFFFFF", subColor: "rgba(255, 255, 255, 0.75)", isRTL: false, screenshotImg: null },
+      { headline: "Performances Ultra-Rapides", subtitle: "Optimisé pour une expérience utilisateur fluide et sans accroc", badgeText: "⚡ VITESSE", layoutStyle: "front_classic", bg: { preset: 'cyberpunk' }, fontFamily: "Outfit", textColor: "#FFFFFF", subColor: "rgba(255, 255, 255, 0.75)", isRTL: false, screenshotImg: null },
+      { headline: "Sécurité & Confidentialité 100%", subtitle: "Vos données personnelles sont chiffrées et protégées", badgeText: "🔒 PROTÉGÉ", layoutStyle: "tilt_right", bg: { preset: 'emerald' }, fontFamily: "Outfit", textColor: "#FFFFFF", subColor: "rgba(255, 255, 255, 0.75)", isRTL: false, screenshotImg: null },
+      { headline: "Mode Sombre & Personnalisation", subtitle: "Adaptez l'interface selon votre style et vos préférences", badgeText: "🎨 DESIGN", layoutStyle: "sunset", bg: { preset: 'sunset' }, fontFamily: "Outfit", textColor: "#FFFFFF", subColor: "rgba(255, 255, 255, 0.75)", isRTL: false, screenshotImg: null }
+    ];
+
+    // 4. Reset ASO Data
+    AppState.asoData = {
+      fr: { title: "", shortDesc: "", fullDesc: "", releaseNotes: "" },
+      ar: { title: "", shortDesc: "", fullDesc: "", releaseNotes: "" },
+      en: { title: "", shortDesc: "", fullDesc: "", releaseNotes: "" }
+    };
+    const asoTitleInput = document.getElementById('asoTitleInput');
+    const asoShortDescInput = document.getElementById('asoShortDescInput');
+    const asoFullDescInput = document.getElementById('asoFullDescInput');
+    const asoReleaseNotesInput = document.getElementById('asoReleaseNotesInput');
+    if (asoTitleInput) asoTitleInput.value = "";
+    if (asoShortDescInput) asoShortDescInput.value = "";
+    if (asoFullDescInput) asoFullDescInput.value = "";
+    if (asoReleaseNotesInput) asoReleaseNotesInput.value = "";
+    if (typeof updateAsoCounters === 'function') updateAsoCounters();
+
+    // 5. Reset Privacy Config
+    AppState.privacyConfig = {
+      appName: "Mon Application",
+      devName: "Mon Studio Dev",
+      contactEmail: "contact@monapp.com",
+      effectiveDate: new Date().toISOString().split('T')[0],
+      appType: "Free",
+      permissions: { location: true, notifications: true, camera: false, storage: false, microphone: false, contacts: false },
+      sdks: { playServices: true, admob: true, firebase: true, facebook: false, onesignal: false, unity: false, weather: false },
+      coppa: "no"
+    };
+    AppState.privacyResult = { markdown: "", html: "" };
+    const privacyAppName = document.getElementById('privacyAppName');
+    const privacyDevName = document.getElementById('privacyDevName');
+    const privacyEmail = document.getElementById('privacyEmail');
+    if (privacyAppName) privacyAppName.value = "Mon Application";
+    if (privacyDevName) privacyDevName.value = "Mon Studio Dev";
+    if (privacyEmail) privacyEmail.value = "contact@monapp.com";
+
+    // 6. Reset Asset Resizer Config
+    AppState.assetConfig.sourceImage = null;
+    AppState.assetConfig.customBgImage = null;
+    AppState.assetConfig.customFgImage = null;
+    AppState.assetConfig.customMonochromeImage = null;
+    if (AppState.assetConfig.customResizer) AppState.assetConfig.customResizer.image = null;
+
+    // 7. Update Inputs DOM
+    const featureTitleInput = document.getElementById('featureTitleInput');
+    const featureSubtitleInput = document.getElementById('featureSubtitleInput');
+    const featureBadgeInput = document.getElementById('featureBadgeInput');
+    const scrHeadlineInput = document.getElementById('scrHeadlineInput');
+    const scrSubtitleInput = document.getElementById('scrSubtitleInput');
+    const scrBadgeInput = document.getElementById('scrBadgeInput');
+    if (featureTitleInput) featureTitleInput.value = AppState.featureConfig.title;
+    if (featureSubtitleInput) featureSubtitleInput.value = AppState.featureConfig.subtitle;
+    if (featureBadgeInput) featureBadgeInput.value = AppState.featureConfig.badgeText;
+    if (scrHeadlineInput) scrHeadlineInput.value = AppState.screenshotsList[0].headline;
+    if (scrSubtitleInput) scrSubtitleInput.value = AppState.screenshotsList[0].subtitle;
+    if (scrBadgeInput) scrBadgeInput.value = AppState.screenshotsList[0].badgeText;
+
+    // 8. Re-render all canvases
+    renderAllCanvases();
+    renderAllAssetCanvases();
+
+    showToast("✨ Nouveau projet réinitialisé ! Vous démarrez avec une session propre.");
+  }
+
+  if (confirmResetProjectBtn) {
+    confirmResetProjectBtn.addEventListener('click', () => {
+      resetAppProject();
+      if (resetProjectModal) resetProjectModal.classList.add('hidden');
+    });
+  }
+
   // Initial Lucide Icons & Auth check
   if (window.lucide) lucide.createIcons();
   updateAuthUI();

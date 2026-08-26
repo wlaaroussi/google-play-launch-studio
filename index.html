@@ -103,6 +103,12 @@
           <span>Connexion / Inscription</span>
         </button>
 
+        <!-- New Project Reset Button -->
+        <button id="headerResetProjectBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-rose-950/40 border border-white/10 hover:border-rose-500/40 text-gray-300 hover:text-rose-300 font-bold text-xs shadow-md hover:scale-[1.02] transition-all" title="Réinitialiser pour créer un projet d'une nouvelle application">
+          <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-400"></i>
+          <span class="hidden sm:inline">Nouveau Projet</span>
+        </button>
+
         <!-- Quick Global Master Export Button -->
         <button id="masterExportHeaderBtn" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-white font-bold text-xs shadow-md hover:scale-[1.02] transition-all">
           <i data-lucide="archive" class="w-4 h-4 text-cyan-400"></i>
@@ -2762,6 +2768,48 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- MODAL: RÉINITIALISATION / NOUVEAU PROJET APP -->
+  <!-- ========================================================================= -->
+  <div id="resetProjectModal" class="hidden fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md p-6 sm:p-7 rounded-3xl border border-rose-500/30 shadow-2xl relative space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <!-- Close Button -->
+      <button id="closeResetModalBtn" class="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/30">
+          <i data-lucide="rotate-ccw" class="w-7 h-7 text-white"></i>
+        </div>
+        <h3 class="text-xl font-extrabold text-white font-['Outfit']">Démarrer un Nouveau Projet ?</h3>
+        <p class="text-xs text-gray-300 leading-relaxed">
+          Cette action va réinitialiser **tous les visuels, textes ASO, politique de confidentialité et images téléversées** pour vous permettre de préparer le dossier d'une nouvelle application.
+        </p>
+      </div>
+
+      <div class="glass-panel p-4 rounded-2xl border border-white/5 bg-rose-950/10 space-y-2 text-xs text-gray-400">
+        <div class="flex items-center gap-2 text-rose-300 font-bold">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+          <span>Attention : Vos modifications actuelles seront effacées</span>
+        </div>
+        <p class="text-[11px] text-gray-400">Si vous n'avez pas encore téléchargé votre Pack .ZIP actuel, pensez à l'exporter avant de réinitialiser.</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-1">
+        <button id="confirmResetProjectBtn" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-extrabold text-xs shadow-lg shadow-rose-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Oui, Réinitialiser à zéro</span>
+        </button>
+        <button id="cancelResetModalBtn" class="py-3 px-5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 font-bold text-xs transition">
+          Annuler
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- FOOTER -->
   <!-- ========================================================================= -->
   <footer class="border-t border-white/10 py-6 bg-[#0B0F19]">
@@ -2857,17 +2905,17 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/pricing-manager.js?v=4"></script>
-  <script src="js/auth.js?v=4"></script>
-  <script src="js/admin-dashboard.js?v=4"></script>
-  <script src="js/aso-templates.js?v=4"></script>
-  <script src="js/privacy-generator.js?v=4"></script>
-  <script src="js/checklist-data.js?v=4"></script>
-  <script src="js/canvas-engine.js?v=4"></script>
-  <script src="js/asset-resizer.js?v=4"></script>
-  <script src="js/video-engine.js?v=4"></script>
-  <script src="js/exporter.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/pricing-manager.js?v=5"></script>
+  <script src="js/auth.js?v=5"></script>
+  <script src="js/admin-dashboard.js?v=5"></script>
+  <script src="js/aso-templates.js?v=5"></script>
+  <script src="js/privacy-generator.js?v=5"></script>
+  <script src="js/checklist-data.js?v=5"></script>
+  <script src="js/canvas-engine.js?v=5"></script>
+  <script src="js/asset-resizer.js?v=5"></script>
+  <script src="js/video-engine.js?v=5"></script>
+  <script src="js/exporter.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 
   <!-- Initialize Lucide Icons -->
   <script>
