@@ -44,7 +44,7 @@ class PricingManager {
           '✅ Guide & Messages types pour les 20 testeurs (14 jours)',
           '✅ Téléchargement du Pack Complet Google Play (.ZIP en 1 clic)'
         ],
-        ctaText: 'Choisir le Plan PRO (5$/mois)',
+        ctaText: 'Choisir le Plan PRO (5$/mois)', // updated dynamically
         highlighted: true
       },
       vip: {
@@ -63,7 +63,7 @@ class PricingManager {
           '🍎 Accès anticipé au module Apple App Store iOS',
           '⚡ Support développeur prioritaire 7j/7'
         ],
-        ctaText: 'Choisir le Plan VIP (8$/mois)',
+        ctaText: 'Choisir le Plan VIP (8$/mois)', // updated dynamically
         highlighted: false
       }
     };
@@ -88,10 +88,17 @@ class PricingManager {
   static updatePlan(planKey, price, name, description, featuresArray) {
     const plans = this.getPlans();
     if (plans[planKey]) {
-      plans[planKey].price = parseFloat(price) || 0;
+      const newPrice = parseFloat(price) || 0;
+      plans[planKey].price = newPrice;
       if (name) plans[planKey].name = name;
       if (description) plans[planKey].description = description;
       if (Array.isArray(featuresArray)) plans[planKey].features = featuresArray;
+      // Regenerate button text with new price
+      if (planKey === 'pro') {
+        plans[planKey].ctaText = `Choisir le Plan PRO (${newPrice}$/mois)`;
+      } else if (planKey === 'vip') {
+        plans[planKey].ctaText = `Choisir le Plan VIP (${newPrice}$/mois)`;
+      }
       this.savePlans(plans);
       return { success: true, plans };
     }

@@ -1809,7 +1809,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02]' 
             : 'bg-gray-800 hover:bg-gray-700 text-white border border-white/10 hover:scale-[1.02]'
         }">
-          ${plan.ctaText || 'Choisir ce Plan'}
+          ${plan.id === 'free' 
+            ? (plan.ctaText || 'Tester Gratuitement') 
+            : `Choisir le Plan ${plan.id === 'pro' ? 'PRO' : 'VIP'} (${plan.price}${plan.currency}/mois)`
+          }
         </button>
       `;
 
@@ -2337,11 +2340,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const proFeats = editProFeatures.value.split('\n').map(s => s.trim()).filter(Boolean);
       const vipFeats = editVipFeatures.value.split('\n').map(s => s.trim()).filter(Boolean);
 
-      PricingManager.updatePlan('pro', editProPrice.value, editProName.value, editProDesc.value, proFeats);
-      PricingManager.updatePlan('vip', editVipPrice.value, editVipName.value, editVipDesc.value, vipFeats);
+      const proPrice = parseFloat(editProPrice.value) || 0;
+      const vipPrice = parseFloat(editVipPrice.value) || 0;
 
+      PricingManager.updatePlan('pro', proPrice, editProName.value, editProDesc.value, proFeats);
+      PricingManager.updatePlan('vip', vipPrice, editVipName.value, editVipDesc.value, vipFeats);
+
+      // Re-render landing pricing cards with new prices
       renderLandingPricingCards();
-      showToast("💰 Tarifs et offres mis à jour sur la page d'accueil !");
+
+      // Update upgrade modal price badges
+      const pBadge = document.getElementById('upgradeProPriceBadge');
+      const vBadge = document.getElementById('upgradeVipPriceBadge');
+      if (pBadge) pBadge.innerText = `${proPrice}$ / mois`;
+      if (vBadge) vBadge.innerText = `${vipPrice}$ / mois`;
+
+      // Update admin user management dropdowns that show plan prices
+      document.querySelectorAll('option[value="PRO"]').forEach(opt => {
+        if (opt.closest('select')) opt.text = opt.text.replace(/\d+\$\/mois/, `${proPrice}$/mois`);
+      });
+      document.querySelectorAll('option[value="VIP"]').forEach(opt => {
+        if (opt.closest('select')) opt.text = opt.text.replace(/\d+\$\/mois/, `${vipPrice}$/mois`);
+      });
+
+      showToast(`💰 Tarifs mis à jour : PRO ${proPrice}$/mois — VIP ${vipPrice}$/mois !`);
     });
   }
 
