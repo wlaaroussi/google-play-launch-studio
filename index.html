@@ -1233,6 +1233,60 @@
 
       </div>
 
+      <!-- ======================================================================= -->
+      <!-- AI GENERATOR & PROOFREADER COPILOT PANEL -->
+      <!-- ======================================================================= -->
+      <div class="glass-panel p-6 rounded-3xl border border-purple-500/40 bg-gradient-to-r from-purple-950/30 via-[#0B0F19] to-cyan-950/30 space-y-4 shadow-xl shadow-purple-950/20">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <i data-lucide="bot" class="w-5 h-5 text-black"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-extrabold text-white font-['Outfit']">Assistant IA & Correcteur ASO Copilot</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">IA PRO</span>
+              </div>
+              <p class="text-xs text-gray-400">Générez vos textes ASO sur-mesure, corrigez les fautes et optimisez le référencement Google Play en 1 clic.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          
+          <!-- Prompt / Subject Input -->
+          <div class="md:col-span-6 space-y-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-purple-300">Sujet ou Mots-Clés de votre Application</label>
+            <input type="text" id="aiTopicInput" placeholder="Ex: Application de prière et horaires de salat avec boussole Qibla..." class="w-full glass-input rounded-xl px-4 py-2 text-xs text-white">
+          </div>
+
+          <!-- Tone Selector -->
+          <div class="md:col-span-3 space-y-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Ton de Rédaction</label>
+            <select id="aiToneSelect" class="w-full glass-input rounded-xl px-3 py-2 text-xs font-semibold">
+              <option value="marketing">🚀 Captivant & Marketing</option>
+              <option value="professional">💼 Professionnel & Soigné</option>
+              <option value="direct">⚡ Simple, Court & Direct</option>
+            </select>
+          </div>
+
+          <!-- Actions Buttons -->
+          <div class="md:col-span-3 flex gap-2">
+            <button id="aiGenerateAllBtn" class="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-400 text-black font-extrabold text-xs shadow-md shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98] transition flex items-center justify-center gap-1.5">
+              <i data-lucide="sparkles" class="w-4 h-4 fill-current"></i>
+              <span>Générer par IA</span>
+            </button>
+            <button id="aiOptimizeAllBtn" class="py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-cyan-300 font-bold text-xs transition flex items-center gap-1" title="Corriger et optimiser les textes actuels">
+              <i data-lucide="wand-2" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Corriger</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
       <!-- Main Metadata Form Fields with Strict Limits -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
@@ -1246,8 +1300,12 @@
                 <i data-lucide="tag" class="w-4 h-4"></i>
                 <span>Nom de l'Application</span>
               </label>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <span id="countTitle" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 30</span>
+                <button data-field="title" class="ai-field-optimize-btn text-xs px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-purple-300 flex items-center gap-1 transition" title="Optimiser avec l'IA">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                  <span>IA</span>
+                </button>
                 <button data-target="asoAppTitle" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
                   <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   <span>Copier</span>
@@ -1265,8 +1323,12 @@
                 <i data-lucide="align-left" class="w-4 h-4"></i>
                 <span>Brève Description</span>
               </label>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <span id="countShort" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 80</span>
+                <button data-field="shortDesc" class="ai-field-optimize-btn text-xs px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-purple-300 flex items-center gap-1 transition" title="Optimiser avec l'IA">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                  <span>IA</span>
+                </button>
                 <button data-target="asoShortDesc" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
                   <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   <span>Copier</span>
@@ -1284,8 +1346,12 @@
                 <i data-lucide="file-text" class="w-4 h-4"></i>
                 <span>Description Complète</span>
               </label>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <span id="countFull" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 4000</span>
+                <button data-field="fullDesc" class="ai-field-optimize-btn text-xs px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-purple-300 flex items-center gap-1 transition" title="Optimiser avec l'IA">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                  <span>IA</span>
+                </button>
                 <button data-target="asoFullDesc" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
                   <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   <span>Copier</span>
@@ -1303,8 +1369,12 @@
                 <i data-lucide="git-commit" class="w-4 h-4"></i>
                 <span>Notes de Version (Release Notes)</span>
               </label>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <span id="countRelease" class="char-counter-badge text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 / 500</span>
+                <button data-field="releaseNotes" class="ai-field-optimize-btn text-xs px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-purple-300 flex items-center gap-1 transition" title="Optimiser avec l'IA">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                  <span>IA</span>
+                </button>
                 <button data-target="asoReleaseNotes" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center gap-1">
                   <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   <span>Copier</span>
@@ -2905,17 +2975,17 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/pricing-manager.js?v=5"></script>
-  <script src="js/auth.js?v=5"></script>
-  <script src="js/admin-dashboard.js?v=5"></script>
-  <script src="js/aso-templates.js?v=5"></script>
-  <script src="js/privacy-generator.js?v=5"></script>
-  <script src="js/checklist-data.js?v=5"></script>
-  <script src="js/canvas-engine.js?v=5"></script>
-  <script src="js/asset-resizer.js?v=5"></script>
-  <script src="js/video-engine.js?v=5"></script>
-  <script src="js/exporter.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/pricing-manager.js?v=6"></script>
+  <script src="js/auth.js?v=6"></script>
+  <script src="js/admin-dashboard.js?v=6"></script>
+  <script src="js/aso-templates.js?v=6"></script>
+  <script src="js/privacy-generator.js?v=6"></script>
+  <script src="js/checklist-data.js?v=6"></script>
+  <script src="js/canvas-engine.js?v=6"></script>
+  <script src="js/asset-resizer.js?v=6"></script>
+  <script src="js/video-engine.js?v=6"></script>
+  <script src="js/exporter.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 
   <!-- Initialize Lucide Icons -->
   <script>

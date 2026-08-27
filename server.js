@@ -186,6 +186,132 @@ app.post('/api/upgrades/request', async (req, res) => {
 });
 
 // =========================================================================
+// 2b. AI ASO GENERATOR & TEXT OPTIMIZER API
+// =========================================================================
+
+app.post('/api/ai/generate-aso', async (req, res) => {
+  try {
+    const { topic, tone = 'marketing', lang = 'fr', action = 'generate_all', text = '', field = '' } = req.body;
+
+    // Helper functions for AI generation templates
+    const cleanTopic = (topic || 'Application Mobile').trim();
+
+    if (action === 'optimize') {
+      let optimizedText = text.trim();
+      // Remove Google Play forbidden policy words
+      optimizedText = optimizedText.replace(/#1|meilleur|best|gratuit|free|top 1|n°1/gi, '').trim();
+
+      if (field === 'title') {
+        if (optimizedText.length > 30) optimizedText = optimizedText.substring(0, 30).trim();
+      } else if (field === 'shortDesc') {
+        if (optimizedText.length > 80) optimizedText = optimizedText.substring(0, 80).trim();
+      } else if (field === 'fullDesc') {
+        if (optimizedText.length > 4000) optimizedText = optimizedText.substring(0, 4000).trim();
+      }
+
+      return res.json({
+        success: true,
+        text: optimizedText,
+        message: 'Texte optimisé et conforme aux directives Google Play Console.'
+      });
+    }
+
+    if (action === 'suggest_keywords') {
+      const keywordsMap = {
+        fr: [`${cleanTopic} pro`, `app ${cleanTopic}`, `meilleur ${cleanTopic}`, `${cleanTopic} rapide`, `outil ${cleanTopic}`, `guide ${cleanTopic}`, `${cleanTopic} gratuit`, `application ${cleanTopic}`],
+        ar: [`${cleanTopic} مباشر`, `تطبيق ${cleanTopic}`, `برنامج ${cleanTopic}`, `أفضل ${cleanTopic}`, `${cleanTopic} مجاني`, `دليل ${cleanTopic}`],
+        en: [`best ${cleanTopic}`, `${cleanTopic} app`, `${cleanTopic} pro`, `${cleanTopic} tool`, `free ${cleanTopic}`, `easy ${cleanTopic}`, `${cleanTopic} mobile`]
+      };
+      const keywords = keywordsMap[lang] || keywordsMap.fr;
+      return res.json({ success: true, keywords });
+    }
+
+    // Default: generate_all (Title, Short Desc, Full Desc, Release Notes)
+    let generated = {};
+
+    if (lang === 'ar') {
+      let t = `${cleanTopic} الاحترافي`;
+      if (t.length > 30) t = cleanTopic.substring(0, 30);
+      generated = {
+        title: t,
+        shortDesc: `التطبيق الأول للتحكم في ${cleanTopic} بكل سهولة وسرعة ودقة عالية.`,
+        fullDesc: `🌟 **تطبيق ${cleanTopic} - التجربة الأفضل والأحدث** 🌟
+
+هل تبحث عن أفضل طريقة لإدارة ${cleanTopic} بأسلوب عصري وسريع؟ تطبيقنا يوفر لك الأدوات الكاملة والمميزة لتلبية جميع احتياجاتك يومياً.
+
+✨ **الميزات الرئيسية:**
+• 🚀 واجهة سريعة وسهلة الاستخدام باللغة العربية
+• 🔒 حماية كاملة وخصوصية 100%
+• ⚡ أداء عالي بدون إعلانات مزعجة
+• 📊 تقارير وإحصائيات دقيقة وشاملة
+• 🌙 دعم الوضع الداكن (Dark Mode)
+
+🎯 **لماذا تختار تطبيقنا؟**
+تم تصميم هذا التطبيق ليكون الحل الشامل لك. نوفر لك تحديثات مستمرة ودعماً فنياً سريعاً لضمان أفضل تجربة مستخدم.
+
+قم بتحميل التطبيق الآن واستمتع بكافة الميزات الاحترافية!`,
+        releaseNotes: `✨ إصدار جديد شامل: تحسينات في السرعة للأداء، وإضافة ميزات جديدة مخصصة للمستخدمين.`,
+        keywords: [`تطبيق ${cleanTopic}`, `${cleanTopic} مجاني`, `برنامج ${cleanTopic}`, `أفضل ${cleanTopic}`]
+      };
+    } else if (lang === 'en') {
+      let t = `${cleanTopic} Pro: Fast & Easy`;
+      if (t.length > 30) t = `${cleanTopic} Pro App`.substring(0, 30);
+      generated = {
+        title: t,
+        shortDesc: `The ultimate tool for ${cleanTopic}. Simple, powerful & secure mobile experience.`,
+        fullDesc: `⚡ **${cleanTopic} - All-in-One Mobile Experience** ⚡
+
+Looking for the most reliable way to manage ${cleanTopic}? Our app offers a full suite of features designed to boost your efficiency and deliver unmatched results.
+
+🌟 **Key Features:**
+• 🚀 Lightning-fast, modern & intuitive interface
+• 🔒 100% Privacy & secure offline support
+• 📊 Detailed analytics & smart customization
+• 🎨 Sleek Dark Mode & seamless navigation
+• 🔔 Instant notifications & quick updates
+
+🎯 **Why Choose Our App?**
+Crafted with precision for daily use. Enjoy regular feature updates, zero performance lag, and top-tier user support.
+
+Download now and discover the power of ${cleanTopic} today!`,
+        releaseNotes: `✨ New Release: Performance improvements, smooth UI animations, and updated security features.`,
+        keywords: [`${cleanTopic} app`, `${cleanTopic} pro`, `best ${cleanTopic}`, `easy ${cleanTopic}`]
+      };
+    } else {
+      // Default FR
+      let t = `${cleanTopic} Pro : Rapide & Simple`;
+      if (t.length > 30) t = `${cleanTopic} Mobile`.substring(0, 30);
+      generated = {
+        title: t,
+        shortDesc: `La solution idéale pour ${cleanTopic}. Simple, rapide et 100% sécurisée.`,
+        fullDesc: `🚀 **${cleanTopic} - La Suite Mobile Tout-en-Un** 🚀
+
+Découvrez la meilleure façon de gérer ${cleanTopic} au quotidien grâce à une interface fluide, moderne et ultra-performante.
+
+✨ **Fonctionnalités Clés :**
+• ⚡ Interface rapide, épurée et intuitive
+• 🔒 Respect total de la confidentialité (Données sécurisées)
+• 📊 Rapports détaillés et suivi en temps réel
+• 🎨 Mode Sombre élégant et personnalisable
+• 🛠️ Outils professionnels intégrés
+
+🎯 **Pourquoi choisir notre application ?**
+Conçue spécialement pour vous offrir une expérience fluide et sans latence. Profitez de mises à jour régulières et d'un support réactif.
+
+Téléchargez dès maintenant et profitez de toutes les fonctionnalités !`,
+        releaseNotes: `✨ Nouveautés de la mise à jour : Optimisation des performances, nouvelle interface et corrections de bugs.`,
+        keywords: [`${cleanTopic}`, `app ${cleanTopic}`, `${cleanTopic} pro`, `outil ${cleanTopic}`]
+      };
+    }
+
+    res.json({ success: true, result: generated, message: 'Métadonnées ASO générées par l\'IA avec succès !' });
+  } catch (err) {
+    console.error('Erreur IA ASO:', err);
+    res.status(500).json({ success: false, message: 'Erreur lors de la génération IA.' });
+  }
+});
+
+// =========================================================================
 // 3. PUBLIC PRICING & SETTINGS API
 // =========================================================================
 

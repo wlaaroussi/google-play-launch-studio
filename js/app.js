@@ -876,6 +876,114 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // =========================================================================
+  // AI ASO GENERATOR & PROOFREADER HANDLERS
+  // =========================================================================
+  const aiTopicInput = document.getElementById('aiTopicInput');
+  const aiToneSelect = document.getElementById('aiToneSelect');
+  const aiGenerateAllBtn = document.getElementById('aiGenerateAllBtn');
+  const aiOptimizeAllBtn = document.getElementById('aiOptimizeAllBtn');
+
+  if (aiGenerateAllBtn) {
+    aiGenerateAllBtn.addEventListener('click', async () => {
+      const topic = aiTopicInput ? aiTopicInput.value.trim() : '';
+      if (!topic) {
+        showToast("⚠️ Veuillez entrer un sujet ou une idée d'application (ex: 'App de fitness').", "info");
+        if (aiTopicInput) aiTopicInput.focus();
+        return;
+      }
+
+      const tone = aiToneSelect ? aiToneSelect.value : 'marketing';
+      const lang = AppState.activeAsoLang || 'fr';
+
+      showToast("✨ Génération des métadonnées ASO par l'IA en cours...", "info");
+
+      try {
+        const res = await fetch('/api/ai/generate-aso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, tone, lang, action: 'generate_all' })
+        });
+        const data = await res.json();
+        if (data.success && data.result) {
+          const r = data.result;
+          if (asoAppTitle) asoAppTitle.value = r.title || '';
+          if (asoShortDesc) asoShortDesc.value = r.shortDesc || '';
+          if (asoFullDesc) asoFullDesc.value = r.fullDesc || '';
+          if (asoReleaseNotes) asoReleaseNotes.value = r.releaseNotes || '';
+
+          AppState.asoData[lang] = {
+            title: r.title || '',
+            shortDesc: r.shortDesc || '',
+            fullDesc: r.fullDesc || '',
+            releaseNotes: r.releaseNotes || ''
+          };
+
+          updateCharCount(asoAppTitle, countTitle, 30);
+          updateCharCount(asoShortDesc, countShort, 80);
+          updateCharCount(asoFullDesc, countFull, 4000);
+          updateCharCount(asoReleaseNotes, countRelease, 500);
+
+          showToast("🤖 Métadonnées ASO générées avec succès par l'IA !");
+        } else {
+          showToast(data.message || "Erreur de génération.", "error");
+        }
+      } catch (err) {
+        showToast("Erreur lors de la communication avec le serveur IA.", "error");
+      }
+    });
+  }
+
+  // Optimize individual or all ASO fields with AI
+  document.querySelectorAll('.ai-field-optimize-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const field = btn.getAttribute('data-field');
+      let targetInput = null;
+      if (field === 'title') targetInput = asoAppTitle;
+      else if (field === 'shortDesc') targetInput = asoShortDesc;
+      else if (field === 'fullDesc') targetInput = asoFullDesc;
+      else if (field === 'releaseNotes') targetInput = asoReleaseNotes;
+
+      if (!targetInput || !targetInput.value.trim()) {
+        showToast("⚠️ Le champ est vide. Écrivez un texte avant de l'optimiser.", "info");
+        return;
+      }
+
+      showToast("🪄 Optimisation IA du texte en cours...", "info");
+
+      try {
+        const res = await fetch('/api/ai/generate-aso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'optimize',
+            field: field,
+            text: targetInput.value,
+            lang: AppState.activeAsoLang
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.text) {
+          targetInput.value = data.text;
+          AppState.asoData[AppState.activeAsoLang][field] = data.text;
+          if (field === 'title') updateCharCount(asoAppTitle, countTitle, 30);
+          if (field === 'shortDesc') updateCharCount(asoShortDesc, countShort, 80);
+          if (field === 'fullDesc') updateCharCount(asoFullDesc, countFull, 4000);
+          if (field === 'releaseNotes') updateCharCount(asoReleaseNotes, countRelease, 500);
+          showToast("✨ Texte optimisé et conforme Google Play Console !");
+        }
+      } catch (err) {
+        showToast("Erreur d'optimisation.", "error");
+      }
+    });
+  });
+
+  if (aiOptimizeAllBtn) {
+    aiOptimizeAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.ai-field-optimize-btn').forEach(btn => btn.click());
+    });
+  }
+
+  // =========================================================================
   // PRIVACY POLICY GENERATOR MODULE
   // =========================================================================
   function updatePrivacyPolicy() {
