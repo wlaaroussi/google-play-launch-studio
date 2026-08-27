@@ -2344,6 +2344,10 @@
           <i data-lucide="sliders" class="w-4 h-4"></i>
           <span>Roadmap & Fonctionnalités</span>
         </button>
+        <button data-admintab="ai" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition border border-purple-500/30 text-purple-300">
+          <i data-lucide="cpu" class="w-4 h-4 text-purple-400"></i>
+          <span>Configuration IA & Clés API</span>
+        </button>
         <button data-admintab="settings" class="admin-sub-btn px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 text-gray-300 hover:text-white flex items-center gap-2 transition">
           <i data-lucide="settings" class="w-4 h-4"></i>
           <span>Paramètres & Annonces</span>
@@ -2616,6 +2620,135 @@
           </button>
 
         </div>
+      </div>
+
+      <!-- ADMIN SUBTAB: AI PROVIDER & API KEYS CONFIGURATION -->
+      <div id="admintab-ai" class="admin-sub-pane hidden space-y-6">
+        
+        <div class="glass-panel p-6 rounded-3xl space-y-6 border border-purple-500/30 bg-gradient-to-br from-purple-950/20 via-[#0B0F19] to-cyan-950/20 shadow-xl">
+          
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 class="font-bold text-base text-white flex items-center gap-2 font-['Outfit']">
+                <i data-lucide="cpu" class="w-5 h-5 text-purple-400"></i>
+                <span>Gestion des Fournisseurs d'IA & Clés API</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-1">Choisissez le modèle d'IA actif pour l'application et saisissez vos clés API privées.</p>
+            </div>
+            <button id="adminSaveAiConfigBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-400 text-black font-extrabold text-xs shadow-lg shadow-purple-500/25 hover:scale-[1.02] transition flex items-center gap-1.5">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Enregistrer la Configuration IA</span>
+            </button>
+          </div>
+
+          <!-- Active AI Provider Selection -->
+          <div class="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <label class="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-400"></i>
+              <span>Fournisseur IA Actif pour la Plateforme :</span>
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="gemini" checked class="accent-purple-400">
+                <span class="text-xs font-bold text-white">Google Gemini</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="groq" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">Groq (LLaMA)</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="openai" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">OpenAI (GPT)</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="claude" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">Claude</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="deepseek" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">DeepSeek</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="kimi" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">Kimi</span>
+              </label>
+              <label class="glass-panel p-3 rounded-xl border border-white/10 flex items-center gap-2 cursor-pointer hover:border-cyan-400 transition">
+                <input type="radio" name="activeAiProvider" value="manus" class="accent-purple-400">
+                <span class="text-xs font-bold text-white">Manus</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- API Keys Inputs Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Gemini -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API Google Gemini</span>
+                <span class="text-[10px] text-cyan-400 font-mono">GEMINI_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyGemini" placeholder="AIzaSy..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-cyan-300">
+            </div>
+
+            <!-- Groq -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API Groq</span>
+                <span class="text-[10px] text-amber-400 font-mono">GROQ_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyGroq" placeholder="gsk_..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-amber-300">
+            </div>
+
+            <!-- OpenAI -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API OpenAI (GPT-4o)</span>
+                <span class="text-[10px] text-emerald-400 font-mono">OPENAI_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyOpenAi" placeholder="sk-proj-..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-emerald-300">
+            </div>
+
+            <!-- Claude -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API Anthropic Claude</span>
+                <span class="text-[10px] text-purple-400 font-mono">CLAUDE_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyClaude" placeholder="sk-ant-..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-purple-300">
+            </div>
+
+            <!-- DeepSeek -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API DeepSeek</span>
+                <span class="text-[10px] text-blue-400 font-mono">DEEPSEEK_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyDeepseek" placeholder="sk-..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-blue-300">
+            </div>
+
+            <!-- Kimi -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API Kimi (Moonshot AI)</span>
+                <span class="text-[10px] text-pink-400 font-mono">KIMI_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyKimi" placeholder="sk-..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-pink-300">
+            </div>
+
+            <!-- Manus -->
+            <div class="glass-panel p-4 rounded-xl border border-white/5 space-y-1.5">
+              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
+                <span>🔑 Clé API Manus AI</span>
+                <span class="text-[10px] text-orange-400 font-mono">MANUS_API_KEY</span>
+              </label>
+              <input type="password" id="aiKeyManus" placeholder="manus_sk_..." class="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-orange-300">
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ADMIN SUBTAB 4: SETTINGS & ANNOUNCEMENTS -->
@@ -2975,17 +3108,17 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/pricing-manager.js?v=6"></script>
-  <script src="js/auth.js?v=6"></script>
-  <script src="js/admin-dashboard.js?v=6"></script>
-  <script src="js/aso-templates.js?v=6"></script>
-  <script src="js/privacy-generator.js?v=6"></script>
-  <script src="js/checklist-data.js?v=6"></script>
-  <script src="js/canvas-engine.js?v=6"></script>
-  <script src="js/asset-resizer.js?v=6"></script>
-  <script src="js/video-engine.js?v=6"></script>
-  <script src="js/exporter.js?v=6"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/pricing-manager.js?v=7"></script>
+  <script src="js/auth.js?v=7"></script>
+  <script src="js/admin-dashboard.js?v=7"></script>
+  <script src="js/aso-templates.js?v=7"></script>
+  <script src="js/privacy-generator.js?v=7"></script>
+  <script src="js/checklist-data.js?v=7"></script>
+  <script src="js/canvas-engine.js?v=7"></script>
+  <script src="js/asset-resizer.js?v=7"></script>
+  <script src="js/video-engine.js?v=7"></script>
+  <script src="js/exporter.js?v=7"></script>
+  <script src="js/app.js?v=7"></script>
 
   <!-- Initialize Lucide Icons -->
   <script>

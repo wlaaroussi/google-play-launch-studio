@@ -87,6 +87,35 @@ class AdminDashboard {
   }
 
   /**
+   * Get AI Provider Configuration & API Keys from SQLite API
+   */
+  static async getAiConfig() {
+    try {
+      const res = await fetch('/api/admin/ai-config');
+      const data = await res.json();
+      return data.config || { activeProvider: 'gemini', keys: {} };
+    } catch (e) {
+      return { activeProvider: 'gemini', keys: {} };
+    }
+  }
+
+  /**
+   * Save AI Provider Configuration & API Keys to SQLite API
+   */
+  static async saveAiConfig(activeProvider, keys) {
+    try {
+      const res = await fetch('/api/admin/ai-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activeProvider, keys })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: "Erreur réseau." };
+    }
+  }
+
+  /**
    * Get summary metrics from SQLite API
    */
   static async getMetrics() {

@@ -1943,6 +1943,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 7. Activity Logs
     await renderAdminActivityLogs();
+
+    // 8. AI Provider & Keys Config
+    const aiConfig = await AdminDashboard.getAiConfig();
+    if (aiConfig) {
+      const providerRadio = document.querySelector(`input[name="activeAiProvider"][value="${aiConfig.activeProvider}"]`);
+      if (providerRadio) providerRadio.checked = true;
+
+      const keys = aiConfig.keys || {};
+      const aiKeyGemini = document.getElementById('aiKeyGemini');
+      const aiKeyGroq = document.getElementById('aiKeyGroq');
+      const aiKeyOpenAi = document.getElementById('aiKeyOpenAi');
+      const aiKeyClaude = document.getElementById('aiKeyClaude');
+      const aiKeyDeepseek = document.getElementById('aiKeyDeepseek');
+      const aiKeyKimi = document.getElementById('aiKeyKimi');
+      const aiKeyManus = document.getElementById('aiKeyManus');
+
+      if (aiKeyGemini) aiKeyGemini.value = keys.gemini || '';
+      if (aiKeyGroq) aiKeyGroq.value = keys.groq || '';
+      if (aiKeyOpenAi) aiKeyOpenAi.value = keys.openai || '';
+      if (aiKeyClaude) aiKeyClaude.value = keys.claude || '';
+      if (aiKeyDeepseek) aiKeyDeepseek.value = keys.deepseek || '';
+      if (aiKeyKimi) aiKeyKimi.value = keys.kimi || '';
+      if (aiKeyManus) aiKeyManus.value = keys.manus || '';
+    }
+  }
+
+  // Save AI Config Handler
+  const adminSaveAiConfigBtn = document.getElementById('adminSaveAiConfigBtn');
+  if (adminSaveAiConfigBtn) {
+    adminSaveAiConfigBtn.addEventListener('click', async () => {
+      const activeRadio = document.querySelector('input[name="activeAiProvider"]:checked');
+      const activeProvider = activeRadio ? activeRadio.value : 'gemini';
+
+      const keys = {
+        gemini: document.getElementById('aiKeyGemini')?.value || '',
+        groq: document.getElementById('aiKeyGroq')?.value || '',
+        openai: document.getElementById('aiKeyOpenAi')?.value || '',
+        claude: document.getElementById('aiKeyClaude')?.value || '',
+        deepseek: document.getElementById('aiKeyDeepseek')?.value || '',
+        kimi: document.getElementById('aiKeyKimi')?.value || '',
+        manus: document.getElementById('aiKeyManus')?.value || ''
+      };
+
+      const res = await AdminDashboard.saveAiConfig(activeProvider, keys);
+      if (res.success) {
+        showToast(`🤖 Fournisseur IA actif : ${activeProvider.toUpperCase()} enregistré !`);
+        refreshAdminDashboard();
+      } else {
+        showToast(res.message || "Erreur lors de l'enregistrement.", "error");
+      }
+    });
   }
 
   async function renderAdminUpgradesTable() {

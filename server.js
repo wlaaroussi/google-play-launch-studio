@@ -186,8 +186,75 @@ app.post('/api/upgrades/request', async (req, res) => {
 });
 
 // =========================================================================
-// 2b. AI ASO GENERATOR & TEXT OPTIMIZER API
+// 2b. AI ASO GENERATOR & API KEYS MANAGEMENT API
 // =========================================================================
+
+/**
+ * Get AI Configuration & Saved Keys (Admin only)
+ */
+app.get('/api/admin/ai-config', async (req, res) => {
+  try {
+    const rows = await db.allAsync('SELECT key, value FROM site_settings WHERE key LIKE "ai_%" OR key = "active_ai_provider"');
+    const config = {
+      activeProvider: 'gemini',
+      keys: {
+        gemini: '',
+        groq: '',
+        openai: '',
+        claude: '',
+        deepseek: '',
+        kimi: '',
+        manus: ''
+      }
+    };
+
+    rows.forEach(r => {
+      if (r.key === 'active_ai_provider') config.activeProvider = r.value;
+      else if (r.key.startsWith('ai_key_')) {
+        const provider = r.key.replace('ai_key_', '');
+        config.keys[provider] = r.value || '';
+      }
+    });
+
+    res.json({ success: true, config });
+  } catch (err) {
+    console.error('Erreur get ai config:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+/**
+ * Save AI Configuration & API Keys (Admin only)
+ */
+app.post('/api/admin/ai-config', async (req, res) => {
+  try {
+    const { activeProvider = 'gemini', keys = {} } = req.body;
+
+    // Save active provider
+    await db.runAsync(`
+      INSERT INTO site_settings (key, value) VALUES ('active_ai_provider', ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `, [activeProvider]);
+
+    // Save keys
+    for (const [provider, apiKey] of Object.entries(keys)) {
+      await db.runAsync(`
+        INSERT INTO site_settings (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      `, [`ai_key_${provider}`, apiKey ? apiKey.trim() : '']);
+    }
+
+    await db.runAsync(`
+      INSERT INTO activity_logs (type, user_name, description)
+      VALUES ('ai_config_update', 'Admin', ?)
+    `, [`Mise à jour du fournisseur IA actif (${activeProvider}) et des clés API`]);
+
+    res.json({ success: true, message: `Fournisseur IA actif configuré sur ${activeProvider.toUpperCase()} avec succès !` });
+  } catch (err) {
+    console.error('Erreur save ai config:', err);
+    res.status(500).json({ success: false, message: 'Erreur lors de la sauvegarde.' });
+  }
+});
 
 app.post('/api/ai/generate-aso', async (req, res) => {
   try {
